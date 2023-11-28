@@ -9,6 +9,12 @@ import java.util.concurrent.Semaphore;
 import org.json.JSONObject;
 
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoDeDesligamento;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoDeCarona;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
+import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoCaronaCancelada;
+import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoSaida;
 import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
@@ -45,9 +51,9 @@ public class Parceiro {
 
     public void receba(Comunicado x) throws Exception {
         try {
-            
+
             this.transmissor.writeObject(x.toJson().toString());
-            //this.transmissor.writeObject(x);
+            // this.transmissor.writeObject(x);
             this.transmissor.flush();
         } catch (IOException erro) {
             throw new Exception("Erro de transmissao");
@@ -72,22 +78,28 @@ public class Parceiro {
 
     public Comunicado getComunicadoCorrespondente(JSONObject json) {
         try {
+            JSONObject data = json.getJSONObject("data");
+
             switch (json.getString("type")) {
                 case "PedidoEntrarNoGrupoDeCarona":
-                    return new PedidoEntrarNoGrupoDeCarona(
-                            json.getString("idDoSolicitante"), 
-                            json.getString("idDoGrupoDeCarona")
-                    );
-    
+                    return PedidoEntrarNoGrupoDeCarona.fromJson(data);
                 case "PedidoCriarGrupoDeCarona":
-                    return new PedidoCriarGrupoDeCarona(
-                            json.getString("idDoSolicitante"), 
-                            json.getString("idDoGrupoDeCarona")
-                    );
-    
+                    return PedidoCriarGrupoDeCarona.fromJson(data);
                 case "PedidoSairDoGrupoDeCarona":
-                    return new PedidoSairDoGrupoDeCarona();
-    
+                    return PedidoSairDoGrupoDeCarona.fromJson(data);
+                case "ComunicadoGrupoInexistente":
+                    return ComunicadoGrupoInexistente.fromJson(data);
+                case "ComunicadoGrupoJaExiste":
+                    return ComunicadoGrupoJaExiste.fromJson(data);
+                case "ComunicadoGrupoDeCarona":
+                    return ComunicadoGrupoDeCarona.fromJson(data);
+                case "ComunicadoDeDesligamento":
+                    return ComunicadoDeDesligamento.fromJson(data);
+                case "ComunicadoSaida":
+                    return ComunicadoSaida.fromJson(data);
+                case "ComunicadoCaronaCancelada":
+                    return ComunicadoCaronaCancelada.fromJson(data);
+
                 default:
                     return null;
             }
@@ -96,7 +108,6 @@ public class Parceiro {
             return null;
         }
     }
-    
 
     public Comunicado espie() throws Exception {
         try {
@@ -105,7 +116,7 @@ public class Parceiro {
                 String aux = (String) receptor.readObject();
                 JSONObject auxJson = new JSONObject(aux);
                 this.proximoComunicado = (Comunicado) getComunicadoCorrespondente(auxJson);
-                //this.proximoComunicado = (Comunicado) receptor.readObject();
+                // this.proximoComunicado = (Comunicado) receptor.readObject();
 
             }
             this.mutEx.release();

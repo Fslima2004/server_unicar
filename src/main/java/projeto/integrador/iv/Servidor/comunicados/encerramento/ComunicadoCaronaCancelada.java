@@ -8,11 +8,12 @@ public class ComunicadoCaronaCancelada implements ComunicadoEncerramento{
     @Override
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
+        json.put("type", "ComunicadoCaronaCancelada");
+        json.put("data", new JSONObject()); // Objeto vazio para "data"
         return json;
     }
 
-    @Override
-    public Comunicado fromJson(JSONObject json) {
+    public static Comunicado fromJson(JSONObject json) {
         return new ComunicadoCaronaCancelada();
     }
 }

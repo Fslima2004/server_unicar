@@ -33,9 +33,8 @@ public class PedidoCriarGrupoDeCarona implements PedidoGrupoDeCarona {
         return json;
     }
 
-    @Override
-    public Comunicado fromJson(JSONObject json){
-        return new PedidoCriarGrupoDeCarona(json.getString("idDoSolicitante") , json.getString("idDoGrupoSolicitante") );
+    public static Comunicado fromJson(JSONObject json) {
+        return new PedidoCriarGrupoDeCarona(json.getString("idDoSolicitante") , json.getString("idDoGrupoDeCarona") );
     }
 
 }

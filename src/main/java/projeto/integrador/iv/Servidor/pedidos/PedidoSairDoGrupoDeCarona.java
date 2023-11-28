@@ -14,8 +14,7 @@ public class PedidoSairDoGrupoDeCarona implements PedidoGrupoDeCarona {
         return json;
     }
 
-    @Override
-    public Comunicado fromJson(JSONObject json) {
+    public static Comunicado fromJson(JSONObject json) {
         return new PedidoSairDoGrupoDeCarona ();
     }
 

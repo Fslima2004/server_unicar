@@ -6,5 +6,5 @@ import org.json.JSONObject;
 public interface Comunicado extends Serializable
 {
     JSONObject toJson();
-    Comunicado fromJson(JSONObject json);
+    // Comunicado fromJson(JSONObject json);
 }
