@@ -115,6 +115,7 @@ public class Parceiro {
             if (this.proximoComunicado == null) {
                 String aux = (String) receptor.readObject();
                 JSONObject auxJson = new JSONObject(aux);
+                
                 this.proximoComunicado = (Comunicado) getComunicadoCorrespondente(auxJson);
                 // this.proximoComunicado = (Comunicado) receptor.readObject();
 
@@ -130,12 +131,16 @@ public class Parceiro {
 
     public Comunicado envie() throws Exception {
         try {
-            if (this.proximoComunicado == null)
-                this.proximoComunicado = (Comunicado) this.receptor.readObject();
+            if (this.proximoComunicado == null) {
+                String aux = (String) receptor.readObject();
+                JSONObject auxJson = new JSONObject(aux);
+                this.proximoComunicado = (Comunicado) getComunicadoCorrespondente(auxJson);
+            }
             Comunicado ret = this.proximoComunicado;
             this.proximoComunicado = null;
             return ret;
         } catch (Exception erro) {
+            System.err.println(erro.getMessage());
             throw new Exception("Erro de recepcao");
         }
     }
