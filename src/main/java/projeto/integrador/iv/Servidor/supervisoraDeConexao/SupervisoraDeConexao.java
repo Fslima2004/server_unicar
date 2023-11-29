@@ -12,6 +12,7 @@ import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoDeCarona;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
+import projeto.integrador.iv.Servidor.pedidos.PedidoObterTodasCaronas;
 import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
 
 public class SupervisoraDeConexao extends Thread {
@@ -72,6 +73,8 @@ public class SupervisoraDeConexao extends Thread {
                     tratarPedidoEntrarNoGrupoDeCarona((PedidoEntrarNoGrupoDeCarona) comunicado);
                 } else if (comunicado instanceof PedidoSairDoGrupoDeCarona) {
                     tratarPedidoSairDoGrupoDeCarona((PedidoSairDoGrupoDeCarona) comunicado);
+                } else if (comunicado instanceof PedidoObterTodasCaronas){
+
                 }
             }
         } catch (Exception erro) {
@@ -150,6 +153,22 @@ public class SupervisoraDeConexao extends Thread {
 
         // deve validar aqui se o usuario que saiu era o criador do grupo
         this.usuario.adeus(); // encerra as conexões com o usuario
+    }
+
+    private void tratarPedidoObterTodasCaronas() throws Exception {
+        System.out.println("recebido pedido para enviar todas as caronas");
+        synchronized (this.gruposDeCarona) {
+
+            System.out.println("removendo membro " + usuario.getIdUsuario());
+            GrupoDeCarona grupoDeCarona = this.gruposDeCarona.get(usuario.getIdGrupo());
+            grupoDeCarona.removeMembro(this.usuario);
+
+            if (grupoDeCarona.isEmpty()) {
+                this.gruposDeCarona.remove(usuario.getIdGrupo());
+            }
+
+            System.out.println(this.gruposDeCarona.get(usuario.getIdGrupo()).toString());
+        }
     }
 
 }

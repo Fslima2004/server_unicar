@@ -8,3 +8,5 @@ public interface Comunicado extends Serializable
     JSONObject toJson();
     // Comunicado fromJson(JSONObject json);
 }
+
+

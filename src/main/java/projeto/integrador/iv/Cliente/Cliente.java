@@ -7,6 +7,7 @@ import java.net.Socket;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
+import projeto.integrador.iv.Servidor.pedidos.PedidoObterTodasCaronas;
 import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
 
 public class Cliente {
@@ -87,7 +88,7 @@ public class Cliente {
 
 		do {
 
-			System.out.print("Sua opcao ([E]ntrar, [S]air, [C]riar, [T]erminar)? ");
+			System.out.print("Sua opcao ([E]ntrar, [S]air, [C]riar, [T]erminar, [R]ecuperar caronas disponiveis)? ");
 
 			try {
 				opcao = Character.toUpperCase(Teclado.getUmChar());
@@ -128,6 +129,9 @@ public class Cliente {
 						System.out.println();
 
 						servidor.receba(new PedidoCriarGrupoDeCarona(id, idGrupo));
+						break;
+					case 'R':
+						servidor.receba(new PedidoObterTodasCaronas());
 						break;
 				}
 			} catch (Exception erro) {
