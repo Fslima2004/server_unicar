@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import projeto.integrador.iv.Servidor.aceitadoraDeConexao.AceitadoraDeConexao;
-import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoDeCarona;
+import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.teclado.Teclado;
 
 public class Servidor {
@@ -21,7 +21,7 @@ public class Servidor {
         if (args.length == 1)
             porta = args[0];
 
-        Map<String, GrupoDeCarona> gruposDeCarona = new HashMap<String, GrupoDeCarona>();
+        Map<String, GrupoCarona> gruposDeCarona = new HashMap<String, GrupoCarona>();
 
         // aceita se conectar com usuarios
         AceitadoraDeConexao aceitadoraDeConexao = null;

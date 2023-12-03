@@ -29,7 +29,6 @@ public class Parceiro {
     private BufferedReader receptor;
     private PrintWriter transmissor;
     private Usuario usuario;
-    private String parada;
 
     private Comunicado proximoComunicado = null;
 
@@ -63,12 +62,12 @@ public class Parceiro {
         }
     }
 
-    public Passageiro getPassageiro(Passageiro passageiro) {
-        return this.passageiro;
+    public Usuario getUsuario() {
+        return this.usuario;
     }
 
-    public void setPassageiro(Passageiro passageiro) {
-        this.passageiro = passageiro;
+    public void setUsuario(Usuario novoUsuario) {
+        this.usuario = novoUsuario;
     }
 
     public Comunicado getComunicadoCorrespondente(JSONObject json) {
@@ -107,7 +106,7 @@ public class Parceiro {
 
     public Comunicado espie() throws Exception {
         try {
-            //System.out.println("espie chamado");
+            // System.out.println("espie chamado");
             this.mutEx.acquireUninterruptibly();
             if (this.proximoComunicado == null) {
                 String aux = this.receptor.readLine();

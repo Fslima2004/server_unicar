@@ -17,5 +17,4 @@ public class PedidoSairDoGrupoDeCarona implements PedidoGrupoDeCarona {
     public static Comunicado fromJson(JSONObject json) {
         return new PedidoSairDoGrupoDeCarona ();
     }
-
 }

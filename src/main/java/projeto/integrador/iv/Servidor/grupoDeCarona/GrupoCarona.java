@@ -6,6 +6,8 @@ import java.io.Serializable;
 // de estado da carona, assim como a lista de membros
 import java.util.ArrayList;
 
+import org.json.JSONObject;
+
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoCaronaCancelada;
@@ -13,7 +15,7 @@ import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoSaida;
 import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 
-public class GrupoDeCarona implements Serializable {
+public class GrupoCarona implements Serializable {
     private ArrayList<Parceiro> membros;
     private String idCarona;
     private Usuario motorista;
@@ -22,16 +24,23 @@ public class GrupoDeCarona implements Serializable {
     private double preco;
     private int vagasTotais;
 
-    public GrupoDeCarona(String idCarona, Parceiro criador, String nomeMotorista, String localPartida, String horarioSaida, double preco, int vagasTotais) {
+    public GrupoCarona(String idCarona, Usuario motorista, String localPartida,
+            String horarioSaida, double preco, int vagasTotais) {
         this.idCarona = idCarona;
         this.membros = new ArrayList<Parceiro>();
-        this.idCriador = criador.getIdUsuario();
-        this.membros.add(criador);
-        this.nomeMotorista = nomeMotorista;
+        this.motorista = motorista;
         this.localPartida = localPartida;
         this.horarioSaida = horarioSaida;
         this.preco = preco;
         this.vagasTotais = vagasTotais;
+    }
+
+    public Usuario getMotorista() {
+        return motorista;
+    }
+
+    public String getIdCarona() {
+        return idCarona;
     }
 
     public void addMembro(Parceiro membro) {
@@ -45,14 +54,14 @@ public class GrupoDeCarona implements Serializable {
         // obter ids dos membros deste grupo de carona em uma lista
         ArrayList<Usuario> usuarios = new ArrayList<Usuario>();
         for (Parceiro membroDoGrupo : membros) {
-            usuarios.add(new Usuario(membroDoGrupo.getIdUsuario(), membroDoGrupo.getIdUsuario(), membroDoGrupo.getIdUsuario()));
+            usuarios.add(membroDoGrupo.getUsuario());
         }
         Comunicado comunicado = new ComunicadoGrupoDeCarona(idCarona, usuarios);
         return comunicado;
     }
 
     private boolean isCriador(Parceiro membro) {
-        return membro.getIdUsuario().equals(this.idCriador);
+        return membro.getUsuario().getId().equals(this.motorista.getId());
     }
 
     public boolean isEmpty() {
@@ -92,9 +101,26 @@ public class GrupoDeCarona implements Serializable {
         String ret = "";
         ret += "\nId da carona: " + this.idCarona + "\n";
         for (Parceiro membro : membros) {
-            ret += "    " + membro.getIdUsuario() + "\n";
+            ret += "    " + membro.getUsuario().getId() + "\n";
         }
         return ret;
+    }
+
+    public static GrupoCarona fromJson(JSONObject json) {
+        return new GrupoCarona(json.getString("idCarona"), Usuario.fromJson(json.getJSONObject("motorista")),
+                json.getString("localPartida"), json.getString("horarioSaida"), json.getDouble("preco"),
+                json.getInt("vagasTotais"));
+    }
+
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("idCarona", this.idCarona);
+        json.put("motorista", this.motorista.toJson());
+        json.put("localPartida", this.localPartida);
+        json.put("horarioSaida", this.horarioSaida);
+        json.put("preco", this.preco);
+        json.put("vagasTotais", this.vagasTotais);
+        return json;
     }
 
 }

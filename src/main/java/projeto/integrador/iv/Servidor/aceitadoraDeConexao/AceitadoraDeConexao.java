@@ -2,7 +2,7 @@ package projeto.integrador.iv.Servidor.aceitadoraDeConexao;
 import java.net.*;
 import java.util.*;
 
-import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoDeCarona;
+import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.supervisoraDeConexao.SupervisoraDeConexao;
 
 public class AceitadoraDeConexao extends Thread
@@ -11,10 +11,10 @@ public class AceitadoraDeConexao extends Thread
 
     // aqui vou precisar de um map de id : grupoCarona
     // para poder notificar os membros de uma carona
-    private Map<String, GrupoDeCarona> gruposDeCarona;
+    private Map<String, GrupoCarona> gruposDeCarona;
 
     public AceitadoraDeConexao
-    (String porta, Map<String, GrupoDeCarona> gruposDeCarona)
+    (String porta, Map<String, GrupoCarona> gruposDeCarona)
     throws Exception
     {
         if (porta==null)

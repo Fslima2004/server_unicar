@@ -4,9 +4,6 @@ import java.io.Serializable;
 
 import org.json.JSONObject;
 
-import projeto.integrador.iv.Servidor.comunicados.Comunicado;
-import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
-
 public class Usuario implements Serializable{
     private String id;
     private String nome;
@@ -65,6 +62,6 @@ public class Usuario implements Serializable{
 
     
     public static Usuario fromJson(JSONObject json) {
-        return new Usuario(json.getString("id"), json.getString("nome"), json.getString("cadastro"));
+        return new Usuario(json.getString("id"), json.getString("nome"), json.getString("contato"));
     }
 }

@@ -11,7 +11,7 @@ import java.util.Map;
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
-import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoDeCarona;
+import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
@@ -20,13 +20,13 @@ import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
 public class SupervisoraDeConexao extends Thread {
     private Parceiro usuario;
     private Socket conexao;
-    private Map<String, GrupoDeCarona> gruposDeCarona;
+    private Map<String, GrupoCarona> gruposDeCarona;
 
     void print(String msg) {
         System.out.println(msg);
     }
 
-    public SupervisoraDeConexao(Socket conexao, Map<String, GrupoDeCarona> gruposDeCarona)
+    public SupervisoraDeConexao(Socket conexao, Map<String, GrupoCarona> gruposDeCarona)
             throws Exception {
         if (conexao == null)
             throw new Exception("Conexao ausente");
@@ -109,8 +109,8 @@ public class SupervisoraDeConexao extends Thread {
 
         System.out.println("recebido pedido de criar grupo de carona");
 
-        if (this.gruposDeCarona.containsKey(pedidoCriarGrupo.getIdDoGrupoDeCarona())) {
-            System.out.println("grupo de carona " + pedidoCriarGrupo.getIdDoGrupoDeCarona() + " já existe");
+        if (this.gruposDeCarona.containsKey(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona())) {
+            System.out.println("grupo de carona " + pedidoCriarGrupo.getGrupoDeCarona().getIdCarona() + " já existe");
 
             try {
                 this.usuario.receba(new ComunicadoGrupoJaExiste());
@@ -120,20 +120,20 @@ public class SupervisoraDeConexao extends Thread {
             }
             return;
         }
-        this.usuario.setIdUsuario(pedidoCriarGrupo.getIdDoSolicitante());
-        this.usuario.setIdGrupo(pedidoCriarGrupo.getIdDoGrupoDeCarona());
-        System.out.println("criando grupo de carona " + pedidoCriarGrupo.getIdDoGrupoDeCarona()
-                + " para o usuario " + pedidoCriarGrupo.getIdDoSolicitante());
+
+        this.usuario.setUsuario(pedidoCriarGrupo.getGrupoDeCarona().getMotorista());
+
+        System.out.println("criando grupo de carona " + pedidoCriarGrupo.getGrupoDeCarona().getIdCarona()
+                + " para o usuario " + pedidoCriarGrupo.getGrupoDeCarona().getMotorista().getId());
         synchronized (this.gruposDeCarona) {
-            this.gruposDeCarona.put(pedidoCriarGrupo.getIdDoGrupoDeCarona(),
-                    new GrupoDeCarona(pedidoCriarGrupo.getIdDoGrupoDeCarona(), this.usuario));
+            this.gruposDeCarona.put(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona(), pedidoCriarGrupo.getGrupoDeCarona());
         }
     }
 
     private void tratarPedidoEntrarNoGrupoDeCarona(PedidoEntrarNoGrupoDeCarona pedidoEntrarNoGrupo) {
         System.out.println("recebido pedido para entrar no grupo de carona");
-        if (!this.gruposDeCarona.containsKey(pedidoEntrarNoGrupo.getIdDoGrupoDeCarona())) {
-            System.out.println("grupo de carona " + pedidoEntrarNoGrupo.getIdDoGrupoDeCarona() + " não existe");
+        if (!this.gruposDeCarona.containsKey(pedidoEntrarNoGrupo.getIdGrupoCarona())) {
+            System.out.println("grupo de carona " + pedidoEntrarNoGrupo.getIdGrupoCarona() + " não existe");
 
             try {
                 this.usuario.receba(new ComunicadoGrupoInexistente());
@@ -143,15 +143,15 @@ public class SupervisoraDeConexao extends Thread {
             }
             return;
         }
-        this.usuario.setIdUsuario(pedidoEntrarNoGrupo.getIdDoSolicitante());
-        this.usuario.setIdGrupo(pedidoEntrarNoGrupo.getIdDoGrupoDeCarona());
+        
+        this.usuario.setUsuario(pedidoEntrarNoGrupo.getUsuario());
 
-        System.out.println("entrando no grupo de carona " + pedidoEntrarNoGrupo.getIdDoGrupoDeCarona()
-                + " para o usuario " + pedidoEntrarNoGrupo.getIdDoSolicitante());
+        System.out.println("entrando no grupo de carona " + pedidoEntrarNoGrupo.getIdGrupoCarona()
+                + " para o usuario " + pedidoEntrarNoGrupo.getUsuario().getId());
         synchronized (this.gruposDeCarona) {
-            this.gruposDeCarona.get(usuario.getIdGrupo()).addMembro(this.usuario);
+            this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona()).addMembro(this.usuario);
 
-            System.out.println(this.gruposDeCarona.get(usuario.getIdGrupo()).toString());
+            System.out.println(this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona()).toString());
         }
     }
 
@@ -159,8 +159,11 @@ public class SupervisoraDeConexao extends Thread {
         System.out.println("recebido pedido para sair do grupo de carona");
         synchronized (this.gruposDeCarona) {
 
-            System.out.println("removendo membro " + usuario.getIdUsuario());
-            GrupoDeCarona grupoDeCarona = this.gruposDeCarona.get(usuario.getIdGrupo());
+            System.out.println("removendo membro " + usuario.getUsuario().getId());
+
+            //obter grupo de carona atual => adicionar atirbuto na classe Usuario
+            // e setar ele quando usuario entrar em um grupo ou for o motorista
+            
             grupoDeCarona.removeMembro(this.usuario);
 
             if (grupoDeCarona.isEmpty()) {

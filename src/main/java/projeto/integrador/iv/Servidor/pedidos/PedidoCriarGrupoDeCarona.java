@@ -3,38 +3,33 @@ package projeto.integrador.iv.Servidor.pedidos;
 import org.json.JSONObject;
 
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
-import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
-import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoDeCarona;
+import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 
 public class PedidoCriarGrupoDeCarona implements PedidoGrupoDeCarona {
-    private GrupoDeCarona grupoDeCarona;
+    private GrupoCarona grupoDeCarona;
 
-    public PedidoCriarGrupoDeCarona(GrupoDeCarona grupoDeCarona) {
+    public PedidoCriarGrupoDeCarona(GrupoCarona grupoDeCarona) {
         this.grupoDeCarona = grupoDeCarona;
     }
 
-    public String getIdDoSolicitante() {
-        return grupoDeCarona.motorista.getId();
-    }
-
-    public String getIdDoGrupoDeCarona() {
-        return idDoGrupoDeCarona;
+    public GrupoCarona getGrupoDeCarona() {
+        return grupoDeCarona;
     }
 
     @Override
     public JSONObject toJson() {
         JSONObject data = new JSONObject();
 
-        data.put("idGrupo", idDoGrupoDeCarona);
-        data.put("idUsuario", idDoSolicitante);
+        data.put("grupoCarona", grupoDeCarona.toJson());
         JSONObject json = new JSONObject();
         json.put("type", "PedidoCriarGrupoDeCarona");
-        json.put("data", data); // Objeto vazio para "data"
+        json.put("data", data);
         return json;
     }
 
     public static Comunicado fromJson(JSONObject json) {
-        return new PedidoCriarGrupoDeCarona(json.getString("idUsuario") , json.getString("idGrupo") );
+        return new PedidoCriarGrupoDeCarona(
+                GrupoCarona.fromJson(json.getJSONObject("data").getJSONObject("grupoCarona")));
     }
 
 }
