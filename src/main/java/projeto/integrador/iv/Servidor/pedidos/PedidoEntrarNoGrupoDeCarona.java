@@ -27,8 +27,8 @@ public class PedidoEntrarNoGrupoDeCarona implements PedidoGrupoDeCarona {
     public JSONObject toJson() {
         JSONObject data = new JSONObject();
 
-        data.put("idDoGrupoDeCarona", idDoGrupoDeCarona);
-        data.put("idDoSolicitante", idDoSolicitante);
+        data.put("idGrupo", idDoGrupoDeCarona);
+        data.put("idUsuario", idDoSolicitante);
         JSONObject json = new JSONObject();
         json.put("type", "PedidoEntrarNoGrupoDeCarona");
         json.put("data", data); // Objeto vazio para "data"
@@ -36,6 +36,6 @@ public class PedidoEntrarNoGrupoDeCarona implements PedidoGrupoDeCarona {
     }
 
     public static Comunicado fromJson(JSONObject json) {
-        return new PedidoEntrarNoGrupoDeCarona(json.getString("idDoSolicitante"), json.getString("idDoGrupoDeCarona"));
+        return new PedidoEntrarNoGrupoDeCarona(json.getString("idUsuario"), json.getString("idGrupo"));
     }
 }
