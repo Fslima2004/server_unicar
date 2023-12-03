@@ -1,7 +1,8 @@
 package projeto.integrador.iv.Cliente;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
@@ -36,22 +37,19 @@ public class Cliente {
 			return;
 		}
 
-		ObjectOutputStream transmissor = null;
+		PrintWriter transmissor = null;
 		try {
-			transmissor = new ObjectOutputStream(
-					conexao.getOutputStream());
+			transmissor = new PrintWriter(conexao.getOutputStream(), true);
 		} catch (Exception erro) {
 			System.err.println("Indique o servidor e a porta corretos!\n");
 			return;
 		}
 
-		ObjectInputStream receptor = null;
+		BufferedReader receptor = null;
 		try {
-			receptor = new ObjectInputStream(
-					conexao.getInputStream());
+			receptor = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
 		} catch (Exception erro) {
 			System.err.println("Indique o servidor e a porta corretos!\n");
-
 			return;
 		}
 

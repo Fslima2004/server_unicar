@@ -1,8 +1,11 @@
 package projeto.integrador.iv.Servidor.parceiro;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.Semaphore;
 
@@ -21,8 +24,8 @@ import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
 
 public class Parceiro {
     private Socket conexao;
-    private ObjectInputStream receptor;
-    private ObjectOutputStream transmissor;
+    private BufferedReader receptor;
+    private PrintWriter transmissor;
     private String idUsuario;
     private String idGrupo;
 
@@ -31,15 +34,15 @@ public class Parceiro {
     private Semaphore mutEx = new Semaphore(1, true);
 
     public Parceiro(Socket conexao,
-            ObjectInputStream receptor,
-            ObjectOutputStream transmissor)
+            BufferedReader receptor,
+            PrintWriter transmissor)
             throws Exception // se parametro nulos
     {
         if (conexao == null)
             throw new Exception("Conexao ausente");
 
-        if (receptor == null)
-            throw new Exception("Receptor ausente");
+        // if (receptor == null)
+        // throw new Exception("Receptor ausente");
 
         if (transmissor == null)
             throw new Exception("Transmissor ausente");
@@ -51,11 +54,9 @@ public class Parceiro {
 
     public void receba(Comunicado x) throws Exception {
         try {
-
-            this.transmissor.writeObject(x.toJson().toString());
-            // this.transmissor.writeObject(x);
+            this.transmissor.println(x.toJson().toString());
             this.transmissor.flush();
-        } catch (IOException erro) {
+        } catch (Exception erro) {
             throw new Exception("Erro de transmissao");
         }
     }
@@ -111,37 +112,50 @@ public class Parceiro {
 
     public Comunicado espie() throws Exception {
         try {
+            //System.out.println("espie chamado");
             this.mutEx.acquireUninterruptibly();
             if (this.proximoComunicado == null) {
-                String aux = (String) receptor.readObject();
-                JSONObject auxJson = new JSONObject(aux);
-                
-                this.proximoComunicado = (Comunicado) getComunicadoCorrespondente(auxJson);
-                // this.proximoComunicado = (Comunicado) receptor.readObject();
+                String aux = this.receptor.readLine();
+
+                if (aux != null) {
+                    System.out.println("Received: " + aux);
+
+                    JSONObject auxJson = new JSONObject(aux);
+
+                    this.proximoComunicado = (Comunicado) getComunicadoCorrespondente(auxJson);
+                }
 
             }
             this.mutEx.release();
             return this.proximoComunicado;
         } catch (Exception erro) {
-            // print error message
             System.err.println(erro.getMessage());
-            throw new Exception("Erro de recepcao");
+            throw new Exception("espie: Erro de recepcao");
         }
     }
 
     public Comunicado envie() throws Exception {
         try {
+
+            System.out.println("envie chamado");
             if (this.proximoComunicado == null) {
-                String aux = (String) receptor.readObject();
-                JSONObject auxJson = new JSONObject(aux);
-                this.proximoComunicado = (Comunicado) getComunicadoCorrespondente(auxJson);
+
+                System.out.println("envie: proximoComunicado == null");
+                String aux = this.receptor.readLine();
+
+                if (aux != null) {
+                    System.out.println("Received: " + aux);
+
+                    JSONObject auxJson = new JSONObject(aux);
+                    this.proximoComunicado = (Comunicado) getComunicadoCorrespondente(auxJson);
+                }
             }
             Comunicado ret = this.proximoComunicado;
             this.proximoComunicado = null;
             return ret;
         } catch (Exception erro) {
             System.err.println(erro.getMessage());
-            throw new Exception("Erro de recepcao");
+            throw new Exception("envie: Erro de recepcao");
         }
     }
 

@@ -1,7 +1,10 @@
 package projeto.integrador.iv.Servidor.supervisoraDeConexao;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Map;
 
@@ -19,6 +22,10 @@ public class SupervisoraDeConexao extends Thread {
     private Socket conexao;
     private Map<String, GrupoDeCarona> gruposDeCarona;
 
+    void print(String msg) {
+        System.out.println(msg);
+    }
+
     public SupervisoraDeConexao(Socket conexao, Map<String, GrupoDeCarona> gruposDeCarona)
             throws Exception {
         if (conexao == null)
@@ -32,41 +39,53 @@ public class SupervisoraDeConexao extends Thread {
     }
 
     public void run() {
-        ObjectOutputStream transmissor;
+        PrintWriter transmissor;
         try {
-            transmissor = new ObjectOutputStream(
-                    this.conexao.getOutputStream());
+            transmissor = new PrintWriter(this.conexao.getOutputStream(), true);
         } catch (Exception erro) {
+            System.out.println("[ERRO - transmissor]: " + erro.getMessage());
             return;
         }
 
-        ObjectInputStream receptor = null;
+        print("transmissor ok");
+
+        BufferedReader receptor = null;
         try {
-            receptor = new ObjectInputStream(
-                    this.conexao.getInputStream());
-        } catch (Exception err0) {
+            receptor = new BufferedReader(new InputStreamReader(this.conexao.getInputStream()));
+        } catch (Exception erro) {
             try {
                 transmissor.close();
             } catch (Exception falha) {
             } // so tentando fechar antes de acabar a thread
 
+            System.out.println("[ERRO - receptor]: " + erro.getMessage());
             return;
         }
+
+        print("receptor ok");
 
         try {
             this.usuario = new Parceiro(this.conexao,
                     receptor,
                     transmissor);
         } catch (Exception erro) {
+            System.out.println("[ERRO - usuario]: " + erro.getMessage());
         } // sei que passei os parametros corretos
+
+        print("usuario ok");
 
         try {
             for (;;) {
-                Comunicado comunicado = this.usuario.envie();
 
-                if (comunicado == null)
-                    return;
-                else if (comunicado instanceof PedidoCriarGrupoDeCarona) {
+                Comunicado comunicado;
+
+                do {
+                    comunicado = this.usuario.espie();
+                } while (!(comunicado instanceof Comunicado));
+
+                comunicado = this.usuario.envie();
+
+                if (comunicado instanceof PedidoCriarGrupoDeCarona) {
                     tratarPedidoCriarGrupoDeCarona((PedidoCriarGrupoDeCarona) comunicado);
                 } else if (comunicado instanceof PedidoEntrarNoGrupoDeCarona) {
                     tratarPedidoEntrarNoGrupoDeCarona((PedidoEntrarNoGrupoDeCarona) comunicado);
@@ -81,6 +100,7 @@ public class SupervisoraDeConexao extends Thread {
             } catch (Exception falha) {
             } // so tentando fechar antes de acabar a thread
 
+            System.out.println("[ERRO - for loop]: " + erro.getMessage());
             return;
         }
     }
@@ -96,6 +116,7 @@ public class SupervisoraDeConexao extends Thread {
                 this.usuario.receba(new ComunicadoGrupoJaExiste());
             } catch (Exception erro) {
                 // sei que passei os parametros corretos
+                System.out.println("[ERRO - tratarPedidoCriarGrupoDeCarona]: " + erro.getMessage());
             }
             return;
         }
@@ -118,6 +139,7 @@ public class SupervisoraDeConexao extends Thread {
                 this.usuario.receba(new ComunicadoGrupoInexistente());
             } catch (Exception erro) {
                 // sei que passei os parametros corretos
+                System.out.println("[ERRO - tratarPedidoEntrarNoGrupoDeCarona]: " + erro.getMessage());
             }
             return;
         }
