@@ -33,6 +33,7 @@ public class ComunicadoGrupoDeCarona implements Comunicado {
         for (Usuario usuario : usuarios) {
             usuariosArray.put(usuario.toJson());
         }
+        
         data.put("usuarios", usuariosArray);
 
         JSONObject json = new JSONObject();

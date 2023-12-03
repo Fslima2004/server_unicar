@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoDeDesligamento;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoCriadoComSucesso;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
@@ -100,7 +101,8 @@ public class Parceiro {
                     return ComunicadoSaida.fromJson(data);
                 case "ComunicadoCaronaCancelada":
                     return ComunicadoCaronaCancelada.fromJson(data);
-
+                case "ComunicadoGrupoCriadoComSucesso":
+                    return ComunicadoGrupoCriadoComSucesso.fromJson(data);
                 default:
                     return null;
             }
