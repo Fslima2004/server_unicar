@@ -19,6 +19,7 @@ import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
 import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoCaronaCancelada;
 import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoSaida;
+import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
 import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
@@ -27,8 +28,8 @@ public class Parceiro {
     private Socket conexao;
     private BufferedReader receptor;
     private PrintWriter transmissor;
-    private String idUsuario;
-    private String idGrupo;
+    private Usuario usuario;
+    private String parada;
 
     private Comunicado proximoComunicado = null;
 
@@ -62,20 +63,12 @@ public class Parceiro {
         }
     }
 
-    public void setIdUsuario(String id) {
-        this.idUsuario = id;
+    public Passageiro getPassageiro(Passageiro passageiro) {
+        return this.passageiro;
     }
 
-    public String getIdUsuario() {
-        return this.idUsuario;
-    }
-
-    public void setIdGrupo(String id) {
-        this.idGrupo = id;
-    }
-
-    public String getIdGrupo() {
-        return this.idGrupo;
+    public void setPassageiro(Passageiro passageiro) {
+        this.passageiro = passageiro;
     }
 
     public Comunicado getComunicadoCorrespondente(JSONObject json) {

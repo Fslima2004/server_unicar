@@ -3,18 +3,18 @@ package projeto.integrador.iv.Servidor.pedidos;
 import org.json.JSONObject;
 
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
+import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
+import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoDeCarona;
 
 public class PedidoCriarGrupoDeCarona implements PedidoGrupoDeCarona {
-    private String idDoSolicitante;
-    private String idDoGrupoDeCarona;
+    private GrupoDeCarona grupoDeCarona;
 
-    public PedidoCriarGrupoDeCarona(String idDoSolicitante, String idDoGrupoDeCarona) {
-        this.idDoSolicitante = idDoSolicitante;
-        this.idDoGrupoDeCarona = idDoGrupoDeCarona;
+    public PedidoCriarGrupoDeCarona(GrupoDeCarona grupoDeCarona) {
+        this.grupoDeCarona = grupoDeCarona;
     }
 
     public String getIdDoSolicitante() {
-        return idDoSolicitante;
+        return grupoDeCarona.motorista.getId();
     }
 
     public String getIdDoGrupoDeCarona() {

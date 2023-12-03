@@ -16,13 +16,22 @@ import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 public class GrupoDeCarona implements Serializable {
     private ArrayList<Parceiro> membros;
     private String idCarona;
-    private String idCriador;
+    private Usuario motorista;
+    private String localPartida;
+    private String horarioSaida;
+    private double preco;
+    private int vagasTotais;
 
-    public GrupoDeCarona(String idCarona, Parceiro criador) {
+    public GrupoDeCarona(String idCarona, Parceiro criador, String nomeMotorista, String localPartida, String horarioSaida, double preco, int vagasTotais) {
         this.idCarona = idCarona;
         this.membros = new ArrayList<Parceiro>();
         this.idCriador = criador.getIdUsuario();
         this.membros.add(criador);
+        this.nomeMotorista = nomeMotorista;
+        this.localPartida = localPartida;
+        this.horarioSaida = horarioSaida;
+        this.preco = preco;
+        this.vagasTotais = vagasTotais;
     }
 
     public void addMembro(Parceiro membro) {
@@ -36,7 +45,7 @@ public class GrupoDeCarona implements Serializable {
         // obter ids dos membros deste grupo de carona em uma lista
         ArrayList<Usuario> usuarios = new ArrayList<Usuario>();
         for (Parceiro membroDoGrupo : membros) {
-            usuarios.add(new Usuario(membroDoGrupo.getIdUsuario()));
+            usuarios.add(new Usuario(membroDoGrupo.getIdUsuario(), membroDoGrupo.getIdUsuario(), membroDoGrupo.getIdUsuario()));
         }
         Comunicado comunicado = new ComunicadoGrupoDeCarona(idCarona, usuarios);
         return comunicado;
