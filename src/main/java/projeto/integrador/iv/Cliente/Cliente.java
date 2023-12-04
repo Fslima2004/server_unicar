@@ -10,6 +10,7 @@ import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
+import projeto.integrador.iv.Servidor.pedidos.PedidoMeuGrupoCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
 
 public class Cliente {
@@ -87,7 +88,7 @@ public class Cliente {
 
 		do {
 
-			System.out.print("Sua opcao ([E]ntrar, [S]air, [C]riar, [T]erminar)? ");
+			System.out.print("Sua opcao ([E]ntrar, [S]air, [C]riar, [T]erminar, [M]eu grupo)? ");
 
 			try {
 				opcao = Character.toUpperCase(Teclado.getUmChar());
@@ -96,7 +97,7 @@ public class Cliente {
 
 			}
 
-			if ("ESCT".indexOf(opcao) == -1) {
+			if ("ESCTM".indexOf(opcao) == -1) {
 				System.err.println("Opcao invalida!\n");
 
 			}
@@ -121,10 +122,32 @@ public class Cliente {
 						servidor.receba(new PedidoSairDoGrupoDeCarona());
 						break;
 					case 'C':
-						
 						GrupoCarona grupoCarona = obterCarona();
-
 						servidor.receba(new PedidoCriarGrupoDeCarona(grupoCarona));
+						break;
+					case 'M':
+						// obter id
+						System.out.print("Qual o id do grupo em que deseja ingressar? ");
+						idGrupo = Teclado.getUmString();
+						System.out.println();
+
+						// categoria: motorista ou passageiro
+						System.out.print("Você é [M]otorista ou [P]assageiro? ");
+						char categoria = Teclado.getUmChar();
+						System.out.println();
+
+						String categoriaString = "";
+
+						if (categoria == 'M') {
+							categoriaString = "motorista";
+						} else if (categoria == 'P') {
+							categoriaString = "passageiro";
+						} else {
+							System.out.println("Categoria inválida!");
+							break;
+						}
+
+						servidor.receba(new PedidoMeuGrupoCarona(idGrupo, categoriaString));
 						break;
 				}
 			} catch (Exception erro) {

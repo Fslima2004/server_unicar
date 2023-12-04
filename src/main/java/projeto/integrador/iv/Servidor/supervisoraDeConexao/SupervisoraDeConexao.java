@@ -9,11 +9,13 @@ import java.util.Map;
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoMeuGrupoCarona;
 import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
 import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
+import projeto.integrador.iv.Servidor.pedidos.PedidoMeuGrupoCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
 
 public class SupervisoraDeConexao extends Thread {
@@ -90,7 +92,12 @@ public class SupervisoraDeConexao extends Thread {
                     tratarPedidoEntrarNoGrupoDeCarona((PedidoEntrarNoGrupoDeCarona) comunicado);
                 } else if (comunicado instanceof PedidoSairDoGrupoDeCarona) {
                     tratarPedidoSairDoGrupoDeCarona((PedidoSairDoGrupoDeCarona) comunicado);
+                } else if (comunicado instanceof PedidoMeuGrupoCarona) {
+                    tratarPedidoMeuGrupoCarona((PedidoMeuGrupoCarona) comunicado);
+                } else {
+                    System.out.println("comunicado desconhecido");
                 }
+
             }
         } catch (Exception erro) {
             try {
@@ -105,7 +112,6 @@ public class SupervisoraDeConexao extends Thread {
     }
 
     private void tratarPedidoCriarGrupoDeCarona(PedidoCriarGrupoDeCarona pedidoCriarGrupo) {
-
         System.out.println("recebido pedido de criar grupo de carona");
 
         if (this.gruposDeCarona.containsKey(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona())) {
@@ -149,7 +155,7 @@ public class SupervisoraDeConexao extends Thread {
             }
             return;
         }
-        
+
         Usuario passageiro = new Usuario(pedidoEntrarNoGrupo.getUsuario());
         passageiro.setIdCaronaAtual(pedidoEntrarNoGrupo.getIdGrupoCarona());
 
@@ -196,6 +202,48 @@ public class SupervisoraDeConexao extends Thread {
 
         // deve validar aqui se o usuario que saiu era o criador do grupo
         this.cliente.adeus(); // encerra as conexões com o usuario
+    }
+
+    private void tratarPedidoMeuGrupoCarona(PedidoMeuGrupoCarona pedidoMeuGrupoCarona) {
+        System.out.println("recebido pedido de meu grupo de carona");
+        String id = pedidoMeuGrupoCarona.getIdUsuario();
+
+        //printar todas as caronas
+        for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
+            System.out.println(grupoCarona.toString());
+        }
+
+        try {
+            if (pedidoMeuGrupoCarona.getCategoria().equals(PedidoMeuGrupoCarona.MOTORISTA)) {
+                for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
+                    System.out.println("motorista: " + grupoCarona.getMotorista().getId() + " id recebido: " + id);
+                    if (grupoCarona.getMotorista().getId().equals(id)) {
+                        this.cliente.setUsuario(grupoCarona.getMotorista());
+                        System.out.println("motorista encontrado no grupo de carona:" + grupoCarona.getIdCarona());
+                        this.cliente.receba(new ComunicadoMeuGrupoCarona(grupoCarona));
+                        return;
+                    }
+                }
+            } else if (pedidoMeuGrupoCarona.getCategoria().equals(PedidoMeuGrupoCarona.PASSAGEIRO)) {
+                for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
+                    for (Usuario passageiro : grupoCarona.getMembrosAsUsuarios()) {
+                        System.out.println("passageiro: " + passageiro.getId() + " id recebido: " + id);
+                        if (passageiro.getId().equals(id)) {
+                            this.cliente.setUsuario(passageiro);
+                            System.out.println("passageiro encontrado no grupo de carona:" + grupoCarona.getIdCarona());
+                            this.cliente.receba(new ComunicadoMeuGrupoCarona(grupoCarona));
+                            return;
+                        }
+                    }
+                }
+
+            }
+
+            System.out.println("usuario nao encontrado");
+            this.cliente.receba(new ComunicadoGrupoInexistente());
+        } catch (Exception erro) {
+            System.out.println("[ERRO - tratarPedidoMeuGrupoCarona]: " + erro.getMessage());
+        }
     }
 
 }

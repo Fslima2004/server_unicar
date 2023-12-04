@@ -17,8 +17,8 @@ import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 
 public class GrupoCarona implements Serializable {
     private ArrayList<Parceiro> membros;
-    private String idCarona;
     private Usuario motorista;
+    private String idCarona;
     private String localPartida;
     private String horarioSaida;
     private double preco;
@@ -43,9 +43,17 @@ public class GrupoCarona implements Serializable {
         return idCarona;
     }
 
+    public ArrayList<Usuario> getMembrosAsUsuarios() {
+        ArrayList<Usuario> usuarios = new ArrayList<>();
+        for (Parceiro membro : membros) {
+            usuarios.add(membro.getUsuario());
+        }
+        return usuarios;
+    }
+
     public void addMembro(Parceiro membro) {
         this.membros.add(membro);
-        //print usuario do membro
+        // print usuario do membro
         System.out.println("GrupoCarona: addMembro: " + membro.getUsuario());
         // notifica os membros que um novo membro entrou
         // obter ids dos membros deste grupo de carona em uma lista
