@@ -122,11 +122,13 @@ public class SupervisoraDeConexao extends Thread {
         }
 
         this.usuario.setUsuario(pedidoCriarGrupo.getGrupoDeCarona().getMotorista());
+        this.usuario.getUsuario().setIdCaronaAtual(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona());
 
         System.out.println("criando grupo de carona " + pedidoCriarGrupo.getGrupoDeCarona().getIdCarona()
                 + " para o usuario " + pedidoCriarGrupo.getGrupoDeCarona().getMotorista().getId());
         synchronized (this.gruposDeCarona) {
-            this.gruposDeCarona.put(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona(), pedidoCriarGrupo.getGrupoDeCarona());
+            this.gruposDeCarona.put(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona(),
+                    pedidoCriarGrupo.getGrupoDeCarona());
         }
     }
 
@@ -143,8 +145,9 @@ public class SupervisoraDeConexao extends Thread {
             }
             return;
         }
-        
+
         this.usuario.setUsuario(pedidoEntrarNoGrupo.getUsuario());
+        this.usuario.getUsuario().setIdCaronaAtual(pedidoEntrarNoGrupo.getIdGrupoCarona());
 
         System.out.println("entrando no grupo de carona " + pedidoEntrarNoGrupo.getIdGrupoCarona()
                 + " para o usuario " + pedidoEntrarNoGrupo.getUsuario().getId());
@@ -161,16 +164,21 @@ public class SupervisoraDeConexao extends Thread {
 
             System.out.println("removendo membro " + usuario.getUsuario().getId());
 
-            //obter grupo de carona atual => adicionar atirbuto na classe Usuario
+            // obter grupo de carona atual => adicionar atirbuto na classe Usuario
             // e setar ele quando usuario entrar em um grupo ou for o motorista
-            
+
+            String idGrupo = this.usuario.getUsuario().getIdCaronaAtual();
+            GrupoCarona grupoDeCarona = this.gruposDeCarona.get(idGrupo);
+
+            this.usuario.getUsuario().setIdCaronaAtual(null);
+
             grupoDeCarona.removeMembro(this.usuario);
 
             if (grupoDeCarona.isEmpty()) {
-                this.gruposDeCarona.remove(usuario.getIdGrupo());
+                this.gruposDeCarona.remove(idGrupo);
             }
 
-            System.out.println(this.gruposDeCarona.get(usuario.getIdGrupo()).toString());
+            System.out.println(this.gruposDeCarona.get(idGrupo).toString());
         }
 
         // deve validar aqui se o usuario que saiu era o criador do grupo

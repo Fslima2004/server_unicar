@@ -5,6 +5,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
+import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
@@ -103,29 +105,26 @@ public class Cliente {
 
 				switch (opcao) {
 					case 'E':
-						System.out.print("Seu id de usuario? ");
-						String id = Teclado.getUmString();
-						System.out.println();
-
-						System.out.print("Seu id de grupo? ");
+						System.out.print("Qual o id do grupo em que deseja ingressar? ");
 						String idGrupo = Teclado.getUmString();
 						System.out.println();
 
-						servidor.receba(new PedidoEntrarNoGrupoDeCarona(id, idGrupo));
+						System.out.print("Qual a parada? ");
+						String parada = Teclado.getUmString();
+						System.out.println();
+
+						Usuario usuario = obterUsuario();
+
+						servidor.receba(new PedidoEntrarNoGrupoDeCarona(idGrupo, parada, usuario));
 						break;
 					case 'S':
 						servidor.receba(new PedidoSairDoGrupoDeCarona());
 						break;
 					case 'C':
-						System.out.print("Seu id de usuario? ");
-						id = Teclado.getUmString();
-						System.out.println();
+						
+						GrupoCarona grupoCarona = obterCarona();
 
-						System.out.print("Seu id de grupo? ");
-						idGrupo = Teclado.getUmString();
-						System.out.println();
-
-						servidor.receba(new PedidoCriarGrupoDeCarona(id, idGrupo));
+						servidor.receba(new PedidoCriarGrupoDeCarona(grupoCarona));
 						break;
 				}
 			} catch (Exception erro) {
@@ -144,5 +143,60 @@ public class Cliente {
 
 		System.out.println("Obrigado por usar este programa!");
 		System.exit(0);
+	}
+
+	public static Usuario obterUsuario() {
+		System.out.print("Seu id de usuario? ");
+		String id = Teclado.getUmString();
+		System.out.println();
+
+		System.out.print("Seu nome? ");
+		String nome = Teclado.getUmString();
+		System.out.println();
+
+		System.out.print("Seu contato? ");
+		String contato = Teclado.getUmString();
+		System.out.println();
+
+		return new Usuario(id, nome, contato);
+	}
+
+	public static GrupoCarona obterCarona() {
+		System.out.print("ID da carona: ");
+		String idCarona = Teclado.getUmString();
+		System.out.println();
+
+		System.out.println("Informações do motorista:");
+		Usuario motorista = obterUsuario();
+
+		System.out.print("Local de partida: ");
+		String localPartida = Teclado.getUmString();
+		System.out.println();
+
+		System.out.print("Horário de saída: ");
+		String horarioSaida = Teclado.getUmString();
+		System.out.println();
+
+		System.out.print("Preço: ");
+		double preco = 0.0;
+		try {
+			preco = Teclado.getUmDouble();
+		} catch (Exception e) {
+			System.out.println("Preço inválido");
+		}
+
+		System.out.println();
+
+		System.out.print("Vagas totais: ");
+		int vagasTotais = 0;
+		try {
+			vagasTotais = Teclado.getUmInt();
+		} catch (Exception e) {
+			System.out.println("Vagas inválidas!");
+		}
+
+		System.out.println();
+
+		return new GrupoCarona(idCarona, motorista, localPartida, horarioSaida, preco, vagasTotais);
 	}
 }

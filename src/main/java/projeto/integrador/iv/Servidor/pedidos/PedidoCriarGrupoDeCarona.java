@@ -29,7 +29,7 @@ public class PedidoCriarGrupoDeCarona implements PedidoGrupoDeCarona {
 
     public static Comunicado fromJson(JSONObject json) {
         return new PedidoCriarGrupoDeCarona(
-                GrupoCarona.fromJson(json.getJSONObject("data").getJSONObject("grupoCarona")));
+                GrupoCarona.fromJson(json.getJSONObject("grupoCarona")));
     }
 
 }
