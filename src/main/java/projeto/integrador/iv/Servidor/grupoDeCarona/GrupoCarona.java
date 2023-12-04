@@ -23,8 +23,10 @@ public class GrupoCarona implements Serializable {
     private String horarioSaida;
     private double preco;
     private int vagasTotais;
-    private Parceiro motoristaConexao; // preciso atualizar esta cnexao sempre que um motorista entrar com outra
+    private Parceiro motoristaConexao; // preciso atualizar esta conexao sempre que um motorista entrar com outra
                                        // conexao
+
+    private Runnable callbackAtualizacaoCarona;
 
     public GrupoCarona(String idCarona, Usuario motorista, String localPartida,
             String horarioSaida, double preco, int vagasTotais) {
@@ -37,7 +39,6 @@ public class GrupoCarona implements Serializable {
         this.vagasTotais = vagasTotais;
     }
 
-    //construtor copia
     public GrupoCarona(GrupoCarona grupoCarona) {
         this.idCarona = grupoCarona.idCarona;
         this.membros = grupoCarona.membros;
@@ -60,32 +61,16 @@ public class GrupoCarona implements Serializable {
         this.motoristaConexao = motoristaConexao;
     }
 
-    public ArrayList<Usuario> getMembrosAsUsuarios() {
-        ArrayList<Usuario> usuarios = new ArrayList<>();
-        for (Parceiro membro : membros) {
-            usuarios.add(membro.getUsuario());
-        }
-        return usuarios;
-    }
-
     public ArrayList<Parceiro> getMembros() {
         return membros;
     }
 
-    public String getLocalPartida() {
-        return localPartida;
-    }
-
-    public String getHorarioSaida() {
-        return horarioSaida;
-    }
-
-    public double getPreco() {
-        return preco;
-    }
-
     public int getVagasTotais() {
         return vagasTotais;
+    }
+
+    public void setCallbackAtualizacaoCarona(Runnable callbackAtualizaoCarona) {
+        this.callbackAtualizacaoCarona = callbackAtualizaoCarona;
     }
 
     public void addMembro(Parceiro membro) {
@@ -95,6 +80,8 @@ public class GrupoCarona implements Serializable {
         // notifica os membros que um novo membro entrou
         // obter ids dos membros deste grupo de carona em uma lista
         this.notificaMotoristaComComunicado(this.getComunicadoGrupoDeCarona());
+
+        callbackAtualizacaoCarona.run();
     }
 
     private Comunicado getComunicadoGrupoDeCarona() {
@@ -107,8 +94,21 @@ public class GrupoCarona implements Serializable {
         return comunicado;
     }
 
+    public void atualizarConexaoMembro(String idUsuario, Parceiro conexaoNova) {
+        for (Parceiro membro : membros) {
+            if (membro.getUsuario().getId().equals(idUsuario)) {
+                membro = conexaoNova;
+                return;
+            }
+        }
+    }
+
     private boolean isCriador(Parceiro membro) {
         return membro.getUsuario().getId().equals(this.motorista.getId());
+    }
+
+    public boolean isMotoristaAusente() {
+        return this.motoristaConexao != null;
     }
 
     public boolean isEmpty() {
@@ -128,10 +128,12 @@ public class GrupoCarona implements Serializable {
             // comunicar todos os membros
             this.notificaMembrosComComunicado(new ComunicadoCaronaCancelada());
             this.membros.clear();
+            this.motoristaConexao = null;
             return;
         }
 
-        this.notificaMotoristaComComunicado(this.getComunicadoGrupoDeCarona()); // notifica o motorista que um membro saiu
+        this.notificaMotoristaComComunicado(this.getComunicadoGrupoDeCarona()); // notifica o motorista que um membro
+                                                                                // saiu
     }
 
     private void notificaMembrosComComunicado(Comunicado comunicado) {
@@ -139,7 +141,6 @@ public class GrupoCarona implements Serializable {
             try {
                 membro.receba(comunicado);
             } catch (Exception erro) {
-                // sei que passei os parametros corretos
             }
         }
     }
@@ -148,7 +149,6 @@ public class GrupoCarona implements Serializable {
         try {
             this.motoristaConexao.receba(comunicado);
         } catch (Exception erro) {
-            // sei que passei os parametros corretos
         }
     }
 

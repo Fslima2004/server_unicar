@@ -162,6 +162,16 @@ public class Parceiro {
         }
     }
 
+    public Parceiro(Parceiro parceiro) throws Exception {
+        if (parceiro == null)
+            throw new Exception("Parceiro ausente");
+
+        this.conexao = parceiro.conexao;
+        this.receptor = parceiro.receptor;
+        this.transmissor = parceiro.transmissor;
+        this.usuario = parceiro.usuario;
+    }
+
     public void adeus() throws Exception {
         try {
             this.transmissor.close();

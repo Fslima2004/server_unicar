@@ -7,13 +7,6 @@ import org.json.JSONObject;
 
 import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 
-// PENDENCIAS:
-
-//QUANDO SURGIR UM NOVO GRUPO OU ALGUÉM ENTRAR/SAIR
-//DEVE SER EMITIDO UM NOVO COMUNICADO DE TODOS OS GRUPOS
-//PARA TODOS OS USUÁRIOS QUE NAO TIVEREM UMA CARONA ATUAL
-
-// ---------------
 
 public class ComunicadoTodosGupos implements Comunicado {
     private ArrayList<GrupoCarona> grupos;

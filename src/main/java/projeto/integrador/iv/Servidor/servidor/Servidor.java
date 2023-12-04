@@ -1,10 +1,12 @@
 package projeto.integrador.iv.Servidor.servidor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import projeto.integrador.iv.Servidor.aceitadoraDeConexao.AceitadoraDeConexao;
 import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
+import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 import projeto.integrador.iv.Servidor.teclado.Teclado;
 
 public class Servidor {
@@ -22,14 +24,15 @@ public class Servidor {
             porta = args[0];
 
         Map<String, GrupoCarona> gruposDeCarona = new HashMap<String, GrupoCarona>();
+        ArrayList<Parceiro> usuariosSemCarona = new ArrayList<Parceiro>();
 
         // aceita se conectar com usuarios
         AceitadoraDeConexao aceitadoraDeConexao = null;
         try {
-            aceitadoraDeConexao = new AceitadoraDeConexao(porta, gruposDeCarona);
+            aceitadoraDeConexao = new AceitadoraDeConexao(porta, gruposDeCarona, usuariosSemCarona);
             // AceitadoraDeConexao é uma thread que aceita
             // usuarios conforme pedem para se conectar
-            
+
             System.out.println("Servidor ativo na porta " + porta + "!\n");
             aceitadoraDeConexao.start();
         } catch (Exception erro) {
@@ -48,29 +51,30 @@ public class Servidor {
                 comando = Teclado.getUmString();
             } catch (Exception erro) {
             }
-            
-            //TODO: remover desativar
+
+            // TODO: remover desativar
             // if (comando.toLowerCase().equals("desativar")) {
 
-            //     // synchronized é usado para garantir que apenas uma thread
-            //     // possa acessar o objeto usuarios por vez
-            //     synchronized (gruposDeCarona) {
-            //         ComunicadoDeDesligamento comunicadoDeDesligamento = new ComunicadoDeDesligamento();
+            // // synchronized é usado para garantir que apenas uma thread
+            // // possa acessar o objeto usuarios por vez
+            // synchronized (gruposDeCarona) {
+            // ComunicadoDeDesligamento comunicadoDeDesligamento = new
+            // ComunicadoDeDesligamento();
 
-            //         for (Parceiro usuario : gruposDeCarona) {
-            //             try {
-            //                 usuario.receba(comunicadoDeDesligamento);
-            //                 usuario.adeus();
-            //             } catch (Exception erro) {
-            //             }
-            //         }
-            //     }
+            // for (Parceiro usuario : gruposDeCarona) {
+            // try {
+            // usuario.receba(comunicadoDeDesligamento);
+            // usuario.adeus();
+            // } catch (Exception erro) {
+            // }
+            // }
+            // }
 
-            //     System.out.println("O servidor foi desativado!\n");
-            //     System.exit(0);
+            // System.out.println("O servidor foi desativado!\n");
+            // System.exit(0);
             // } else
-             
-                System.err.println("Comando invalido!\n");
+
+            System.err.println("Comando invalido!\n");
         }
     }
 }

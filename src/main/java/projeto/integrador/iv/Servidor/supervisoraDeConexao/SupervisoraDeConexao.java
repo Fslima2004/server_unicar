@@ -25,12 +25,14 @@ public class SupervisoraDeConexao extends Thread {
     private Parceiro cliente;
     private Socket conexao;
     private Map<String, GrupoCarona> gruposDeCarona;
+    private ArrayList<Parceiro> usuariosSemCarona;
 
     void print(String msg) {
         System.out.println(msg);
     }
 
-    public SupervisoraDeConexao(Socket conexao, Map<String, GrupoCarona> gruposDeCarona)
+    public SupervisoraDeConexao(Socket conexao, Map<String, GrupoCarona> gruposDeCarona,
+            ArrayList<Parceiro> usuariosSemCarona)
             throws Exception {
         if (conexao == null)
             throw new Exception("Conexao ausente");
@@ -38,8 +40,12 @@ public class SupervisoraDeConexao extends Thread {
         if (gruposDeCarona == null)
             throw new Exception("gruposDeCarona ausentes");
 
+        if (usuariosSemCarona == null)
+            throw new Exception("usuariosSemCarona ausentes");
+
         this.conexao = conexao;
         this.gruposDeCarona = gruposDeCarona;
+        this.usuariosSemCarona = usuariosSemCarona;
     }
 
     public void run() {
@@ -137,8 +143,13 @@ public class SupervisoraDeConexao extends Thread {
         this.cliente.setUsuario(motorista);
 
         GrupoCarona grupoDeCarona = new GrupoCarona(pedidoCriarGrupo.getGrupoDeCarona());
-
         grupoDeCarona.setMotoristaConexao(this.cliente);
+        grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
+            @Override
+            public void run() {
+                notificaUsuariosComCaronasAtualizadas();
+            }
+        });
 
         System.out.println("motorista: " + motorista.toString());
         System.out.println("idCaronaAtual: " + motorista.getIdCaronaAtual());
@@ -179,10 +190,18 @@ public class SupervisoraDeConexao extends Thread {
         System.out.println("entrando no grupo de carona " + pedidoEntrarNoGrupo.getIdGrupoCarona()
                 + " para o usuario " + pedidoEntrarNoGrupo.getUsuario().getId());
         synchronized (this.gruposDeCarona) {
+            GrupoCarona caronaAtual = this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona());
 
-            this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona()).addMembro(this.cliente);
+            caronaAtual.setCallbackAtualizacaoCarona(new Runnable() {
+                @Override
+                public void run() {
+                    notificaUsuariosComCaronasAtualizadas();
+                }
+            });
 
-            System.out.println(this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona()).toString());
+            caronaAtual.addMembro(this.cliente);
+
+            System.out.println(caronaAtual.toString());
         }
     }
 
@@ -198,13 +217,24 @@ public class SupervisoraDeConexao extends Thread {
             String idGrupo = this.cliente.getUsuario().getIdCaronaAtual();
             GrupoCarona grupoDeCarona = this.gruposDeCarona.get(idGrupo);
 
+            grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
+                @Override
+                public void run() {
+                    notificaUsuariosComCaronasAtualizadas();
+                }
+            });
+
             this.cliente.getUsuario().setIdCaronaAtual(null);
 
             grupoDeCarona.removeMembro(this.cliente);
 
-            if (grupoDeCarona.isEmpty()) {
+            if (grupoDeCarona.isEmpty() && grupoDeCarona.isMotoristaAusente()) {
                 this.gruposDeCarona.remove(idGrupo);
             }
+
+            // precisa notificar após remover o membro
+            // pois pode ser que o grupo sequer exista mais
+            notificaUsuariosComCaronasAtualizadas();
 
             System.out.println(this.gruposDeCarona.get(idGrupo).toString());
         }
@@ -228,6 +258,7 @@ public class SupervisoraDeConexao extends Thread {
                     System.out.println("motorista: " + grupoCarona.getMotorista().getId() + " id recebido: " + id);
                     if (grupoCarona.getMotorista().getId().equals(id)) {
                         this.cliente.setUsuario(grupoCarona.getMotorista());
+                        // restaura conexao
                         grupoCarona.setMotoristaConexao(cliente); // atualiza a conexao vigente do motorista
                         System.out.println("motorista encontrado no grupo de carona:" + grupoCarona.getIdCarona());
                         this.cliente.receba(new ComunicadoMeuGrupoCarona(grupoCarona));
@@ -236,10 +267,13 @@ public class SupervisoraDeConexao extends Thread {
                 }
             } else if (pedidoMeuGrupoCarona.getCategoria().equals(PedidoMeuGrupoCarona.PASSAGEIRO)) {
                 for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
-                    for (Usuario passageiro : grupoCarona.getMembrosAsUsuarios()) {
-                        System.out.println("passageiro: " + passageiro.getId() + " id recebido: " + id);
-                        if (passageiro.getId().equals(id)) {
-                            this.cliente.setUsuario(passageiro);
+                    for (Parceiro passageiro : grupoCarona.getMembros()) {
+                        System.out.println("passageiro: " + passageiro.getUsuario().getId() + " id recebido: " + id);
+                        if (passageiro.getUsuario().getId().equals(id)) {
+                            Parceiro parceiroAtualizado = this.cliente;
+                            // restaura conexao
+                            parceiroAtualizado.setUsuario(passageiro.getUsuario());
+                            grupoCarona.atualizarConexaoMembro(id, parceiroAtualizado);
                             System.out.println("passageiro encontrado no grupo de carona:" + grupoCarona.getIdCarona());
                             this.cliente.receba(new ComunicadoMeuGrupoCarona(grupoCarona));
                             return;
@@ -259,6 +293,20 @@ public class SupervisoraDeConexao extends Thread {
     private void tratarPedidoTodosGruposDisponiveis(PedidoTodosGruposDisponiveis pedidoTodosGruposDisponiveis) {
         System.out.println("recebido pedido de todos os grupos disponiveis");
 
+        synchronized (this.usuariosSemCarona) {
+            usuariosSemCarona.add(this.cliente);
+        }
+
+        ComunicadoTodosGupos comunicadoTodosGruposDisponiveis = obterComunicadoTodosGruposDisponiveis();
+
+        try {
+            this.cliente.receba(comunicadoTodosGruposDisponiveis);
+        } catch (Exception erro) {
+            System.out.println("[ERRO - tratarPedidoTodosGruposDisponiveis]: " + erro.getMessage());
+        }
+    }
+
+    private ComunicadoTodosGupos obterComunicadoTodosGruposDisponiveis() {
         ArrayList<GrupoCarona> gruposDisponiveis = new ArrayList<GrupoCarona>();
 
         for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
@@ -267,12 +315,19 @@ public class SupervisoraDeConexao extends Thread {
             }
         }
 
-        try {
-            this.cliente.receba(new ComunicadoTodosGupos(gruposDisponiveis));
-        } catch (Exception erro) {
-            System.out.println("[ERRO - tratarPedidoTodosGruposDisponiveis]: " + erro.getMessage());
-        }
+        return new ComunicadoTodosGupos(gruposDisponiveis);
+    }
 
+    private void notificaUsuariosComCaronasAtualizadas() {
+        try {
+            synchronized (this.usuariosSemCarona) {
+                for (Parceiro usuario : this.usuariosSemCarona) {
+                    usuario.receba(obterComunicadoTodosGruposDisponiveis());
+                }
+            }
+        } catch (Exception erro) {
+            System.out.println("[ERRO - notificaMotoristaComComunicado]: " + erro.getMessage());
+        }
     }
 
 }
