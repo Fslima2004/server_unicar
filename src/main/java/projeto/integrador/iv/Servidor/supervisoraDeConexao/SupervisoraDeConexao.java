@@ -120,10 +120,13 @@ public class SupervisoraDeConexao extends Thread {
             return;
         }
 
-        Usuario motorista = pedidoCriarGrupo.getGrupoDeCarona().getMotorista();
+        Usuario motorista = new Usuario(pedidoCriarGrupo.getGrupoDeCarona().getMotorista());
         motorista.setIdCaronaAtual(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona());
 
         this.cliente.setUsuario(motorista);
+
+        System.out.println("motorista: " + motorista.toString());
+        System.out.println("idCaronaAtual: " + motorista.getIdCaronaAtual());
 
         System.out.println("criando grupo de carona " + pedidoCriarGrupo.getGrupoDeCarona().getIdCarona()
                 + " para o usuario " + pedidoCriarGrupo.getGrupoDeCarona().getMotorista().getId());
@@ -146,15 +149,22 @@ public class SupervisoraDeConexao extends Thread {
             }
             return;
         }
-
-        Usuario passageiro = pedidoEntrarNoGrupo.getUsuario();
+        
+        Usuario passageiro = new Usuario(pedidoEntrarNoGrupo.getUsuario());
         passageiro.setIdCaronaAtual(pedidoEntrarNoGrupo.getIdGrupoCarona());
 
         this.cliente.setUsuario(passageiro);
 
+        System.out.println("passageiro: " + passageiro.toString());
+        System.out.println("idCaronaAtual: " + passageiro.getIdCaronaAtual());
+
+        // printar usuario do cliente
+        System.out.println("usuario do cliente: " + this.cliente.getUsuario().toString());
+
         System.out.println("entrando no grupo de carona " + pedidoEntrarNoGrupo.getIdGrupoCarona()
                 + " para o usuario " + pedidoEntrarNoGrupo.getUsuario().getId());
         synchronized (this.gruposDeCarona) {
+
             this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona()).addMembro(this.cliente);
 
             System.out.println(this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona()).toString());

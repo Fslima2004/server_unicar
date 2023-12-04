@@ -14,12 +14,14 @@ public class Usuario implements Serializable {
         this.id = id;
         this.nome = nome;
         this.contato = contato;
+        this.idCaronaAtual = "";
     }
 
-    public Usuario() {
-        this.id = "";
-        this.nome = "";
-        this.contato = "";
+    public Usuario(String id, String nome, String contato, String idCaronaAtual) {
+        this.id = id;
+        this.nome = nome;
+        this.contato = contato;
+        this.idCaronaAtual = idCaronaAtual;
     }
 
     public String getId() {
@@ -51,12 +53,23 @@ public class Usuario implements Serializable {
     }
 
     public void setIdCaronaAtual(String novoIdCaronaAtual) {
+        System.out.println("Usuario: setIdCaronaAtual: " + idCaronaAtual + " -> " + novoIdCaronaAtual);
+
         this.idCaronaAtual = novoIdCaronaAtual;
+        System.out.println("Usuario: idCarona agora é: " + novoIdCaronaAtual);
+    }
+
+    public Usuario(Usuario usuario) {
+        this.id = usuario.id;
+        this.nome = usuario.nome;
+        this.contato = usuario.contato;
+        this.idCaronaAtual = usuario.idCaronaAtual;
     }
 
     @Override
     public String toString() {
-        return "Usuario{" + "id=" + id + ", nome=" + nome + ", contato=" + contato + ", idCaronaAtual=" + idCaronaAtual + '}';
+        return "Usuario{" + "id=" + id + ", nome=" + nome + ", contato=" + contato + ", idCaronaAtual=" + idCaronaAtual
+                + '}';
     }
 
     public JSONObject toJson() {
@@ -69,6 +82,11 @@ public class Usuario implements Serializable {
     }
 
     public static Usuario fromJson(JSONObject json) {
-        return new Usuario(json.getString("id"), json.getString("nome"), json.getString("contato"));
+        String id = json.getString("id");
+        String nome = json.getString("nome");
+        String contato = json.getString("contato");
+        String idCaronaAtual = json.optString("idCaronaAtual", "");
+
+        return new Usuario(id, nome, contato, idCaronaAtual);
     }
 }

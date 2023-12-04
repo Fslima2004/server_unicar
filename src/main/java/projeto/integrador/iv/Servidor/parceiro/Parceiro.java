@@ -1,10 +1,6 @@
 package projeto.integrador.iv.Servidor.parceiro;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.Semaphore;
@@ -55,6 +51,7 @@ public class Parceiro {
 
     public void receba(Comunicado x) throws Exception {
         try {
+            System.out.println("Parceiro: receba: " + x.toJson().toString());
             this.transmissor.println(x.toJson().toString());
             this.transmissor.flush();
         } catch (Exception erro) {

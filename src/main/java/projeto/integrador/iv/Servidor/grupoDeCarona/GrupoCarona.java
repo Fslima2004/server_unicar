@@ -45,6 +45,8 @@ public class GrupoCarona implements Serializable {
 
     public void addMembro(Parceiro membro) {
         this.membros.add(membro);
+        //print usuario do membro
+        System.out.println("GrupoCarona: addMembro: " + membro.getUsuario());
         // notifica os membros que um novo membro entrou
         // obter ids dos membros deste grupo de carona em uma lista
         this.notificaMembrosComComunicado(this.getComunicadoGrupoDeCarona());
