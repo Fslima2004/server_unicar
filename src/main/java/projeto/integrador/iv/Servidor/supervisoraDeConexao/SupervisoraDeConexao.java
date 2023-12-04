@@ -2,8 +2,6 @@ package projeto.integrador.iv.Servidor.supervisoraDeConexao;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Map;
@@ -11,6 +9,7 @@ import java.util.Map;
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
+import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
 import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
 import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
@@ -18,7 +17,7 @@ import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
 
 public class SupervisoraDeConexao extends Thread {
-    private Parceiro usuario;
+    private Parceiro cliente;
     private Socket conexao;
     private Map<String, GrupoCarona> gruposDeCarona;
 
@@ -65,7 +64,7 @@ public class SupervisoraDeConexao extends Thread {
         print("receptor ok");
 
         try {
-            this.usuario = new Parceiro(this.conexao,
+            this.cliente = new Parceiro(this.conexao,
                     receptor,
                     transmissor);
         } catch (Exception erro) {
@@ -80,10 +79,10 @@ public class SupervisoraDeConexao extends Thread {
                 Comunicado comunicado;
 
                 do {
-                    comunicado = this.usuario.espie();
+                    comunicado = this.cliente.espie();
                 } while (!(comunicado instanceof Comunicado));
 
-                comunicado = this.usuario.envie();
+                comunicado = this.cliente.envie();
 
                 if (comunicado instanceof PedidoCriarGrupoDeCarona) {
                     tratarPedidoCriarGrupoDeCarona((PedidoCriarGrupoDeCarona) comunicado);
@@ -113,7 +112,7 @@ public class SupervisoraDeConexao extends Thread {
             System.out.println("grupo de carona " + pedidoCriarGrupo.getGrupoDeCarona().getIdCarona() + " já existe");
 
             try {
-                this.usuario.receba(new ComunicadoGrupoJaExiste());
+                this.cliente.receba(new ComunicadoGrupoJaExiste());
             } catch (Exception erro) {
                 // sei que passei os parametros corretos
                 System.out.println("[ERRO - tratarPedidoCriarGrupoDeCarona]: " + erro.getMessage());
@@ -121,8 +120,10 @@ public class SupervisoraDeConexao extends Thread {
             return;
         }
 
-        this.usuario.setUsuario(pedidoCriarGrupo.getGrupoDeCarona().getMotorista());
-        this.usuario.getUsuario().setIdCaronaAtual(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona());
+        Usuario motorista = pedidoCriarGrupo.getGrupoDeCarona().getMotorista();
+        motorista.setIdCaronaAtual(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona());
+
+        this.cliente.setUsuario(motorista);
 
         System.out.println("criando grupo de carona " + pedidoCriarGrupo.getGrupoDeCarona().getIdCarona()
                 + " para o usuario " + pedidoCriarGrupo.getGrupoDeCarona().getMotorista().getId());
@@ -138,7 +139,7 @@ public class SupervisoraDeConexao extends Thread {
             System.out.println("grupo de carona " + pedidoEntrarNoGrupo.getIdGrupoCarona() + " não existe");
 
             try {
-                this.usuario.receba(new ComunicadoGrupoInexistente());
+                this.cliente.receba(new ComunicadoGrupoInexistente());
             } catch (Exception erro) {
                 // sei que passei os parametros corretos
                 System.out.println("[ERRO - tratarPedidoEntrarNoGrupoDeCarona]: " + erro.getMessage());
@@ -146,13 +147,15 @@ public class SupervisoraDeConexao extends Thread {
             return;
         }
 
-        this.usuario.setUsuario(pedidoEntrarNoGrupo.getUsuario());
-        this.usuario.getUsuario().setIdCaronaAtual(pedidoEntrarNoGrupo.getIdGrupoCarona());
+        Usuario passageiro = pedidoEntrarNoGrupo.getUsuario();
+        passageiro.setIdCaronaAtual(pedidoEntrarNoGrupo.getIdGrupoCarona());
+
+        this.cliente.setUsuario(passageiro);
 
         System.out.println("entrando no grupo de carona " + pedidoEntrarNoGrupo.getIdGrupoCarona()
                 + " para o usuario " + pedidoEntrarNoGrupo.getUsuario().getId());
         synchronized (this.gruposDeCarona) {
-            this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona()).addMembro(this.usuario);
+            this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona()).addMembro(this.cliente);
 
             System.out.println(this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona()).toString());
         }
@@ -162,17 +165,17 @@ public class SupervisoraDeConexao extends Thread {
         System.out.println("recebido pedido para sair do grupo de carona");
         synchronized (this.gruposDeCarona) {
 
-            System.out.println("removendo membro " + usuario.getUsuario().getId());
+            System.out.println("removendo membro " + cliente.getUsuario().getId());
 
             // obter grupo de carona atual => adicionar atirbuto na classe Usuario
             // e setar ele quando usuario entrar em um grupo ou for o motorista
 
-            String idGrupo = this.usuario.getUsuario().getIdCaronaAtual();
+            String idGrupo = this.cliente.getUsuario().getIdCaronaAtual();
             GrupoCarona grupoDeCarona = this.gruposDeCarona.get(idGrupo);
 
-            this.usuario.getUsuario().setIdCaronaAtual(null);
+            this.cliente.getUsuario().setIdCaronaAtual(null);
 
-            grupoDeCarona.removeMembro(this.usuario);
+            grupoDeCarona.removeMembro(this.cliente);
 
             if (grupoDeCarona.isEmpty()) {
                 this.gruposDeCarona.remove(idGrupo);
@@ -182,7 +185,7 @@ public class SupervisoraDeConexao extends Thread {
         }
 
         // deve validar aqui se o usuario que saiu era o criador do grupo
-        this.usuario.adeus(); // encerra as conexões com o usuario
+        this.cliente.adeus(); // encerra as conexões com o usuario
     }
 
 }
