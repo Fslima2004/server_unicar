@@ -23,6 +23,8 @@ public class GrupoCarona implements Serializable {
     private String horarioSaida;
     private double preco;
     private int vagasTotais;
+    private Parceiro motoristaConexao; // preciso atualizar esta cnexao sempre que um motorista entrar com outra
+                                       // conexao
 
     public GrupoCarona(String idCarona, Usuario motorista, String localPartida,
             String horarioSaida, double preco, int vagasTotais) {
@@ -35,12 +37,27 @@ public class GrupoCarona implements Serializable {
         this.vagasTotais = vagasTotais;
     }
 
+    //construtor copia
+    public GrupoCarona(GrupoCarona grupoCarona) {
+        this.idCarona = grupoCarona.idCarona;
+        this.membros = grupoCarona.membros;
+        this.motorista = grupoCarona.motorista;
+        this.localPartida = grupoCarona.localPartida;
+        this.horarioSaida = grupoCarona.horarioSaida;
+        this.preco = grupoCarona.preco;
+        this.vagasTotais = grupoCarona.vagasTotais;
+    }
+
     public Usuario getMotorista() {
         return motorista;
     }
 
     public String getIdCarona() {
         return idCarona;
+    }
+
+    public void setMotoristaConexao(Parceiro motoristaConexao) {
+        this.motoristaConexao = motoristaConexao;
     }
 
     public ArrayList<Usuario> getMembrosAsUsuarios() {
@@ -51,13 +68,33 @@ public class GrupoCarona implements Serializable {
         return usuarios;
     }
 
+    public ArrayList<Parceiro> getMembros() {
+        return membros;
+    }
+
+    public String getLocalPartida() {
+        return localPartida;
+    }
+
+    public String getHorarioSaida() {
+        return horarioSaida;
+    }
+
+    public double getPreco() {
+        return preco;
+    }
+
+    public int getVagasTotais() {
+        return vagasTotais;
+    }
+
     public void addMembro(Parceiro membro) {
         this.membros.add(membro);
         // print usuario do membro
         System.out.println("GrupoCarona: addMembro: " + membro.getUsuario());
         // notifica os membros que um novo membro entrou
         // obter ids dos membros deste grupo de carona em uma lista
-        this.notificaMembrosComComunicado(this.getComunicadoGrupoDeCarona());
+        this.notificaMotoristaComComunicado(this.getComunicadoGrupoDeCarona());
     }
 
     private Comunicado getComunicadoGrupoDeCarona() {
@@ -94,16 +131,24 @@ public class GrupoCarona implements Serializable {
             return;
         }
 
-        this.notificaMembrosComComunicado(this.getComunicadoGrupoDeCarona()); // notifica os membros que um membro saiu
+        this.notificaMotoristaComComunicado(this.getComunicadoGrupoDeCarona()); // notifica o motorista que um membro saiu
     }
 
-    public void notificaMembrosComComunicado(Comunicado comunicado) {
+    private void notificaMembrosComComunicado(Comunicado comunicado) {
         for (Parceiro membro : membros) {
             try {
                 membro.receba(comunicado);
             } catch (Exception erro) {
                 // sei que passei os parametros corretos
             }
+        }
+    }
+
+    private void notificaMotoristaComComunicado(Comunicado comunicado) {
+        try {
+            this.motoristaConexao.receba(comunicado);
+        } catch (Exception erro) {
+            // sei que passei os parametros corretos
         }
     }
 

@@ -4,12 +4,14 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Map;
 
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoMeuGrupoCarona;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoTodosGupos;
 import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
 import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
@@ -17,6 +19,7 @@ import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoMeuGrupoCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
+import projeto.integrador.iv.Servidor.pedidos.PedidoTodosGruposDisponiveis;
 
 public class SupervisoraDeConexao extends Thread {
     private Parceiro cliente;
@@ -94,6 +97,8 @@ public class SupervisoraDeConexao extends Thread {
                     tratarPedidoSairDoGrupoDeCarona((PedidoSairDoGrupoDeCarona) comunicado);
                 } else if (comunicado instanceof PedidoMeuGrupoCarona) {
                     tratarPedidoMeuGrupoCarona((PedidoMeuGrupoCarona) comunicado);
+                } else if (comunicado instanceof PedidoTodosGruposDisponiveis) {
+                    tratarPedidoTodosGruposDisponiveis((PedidoTodosGruposDisponiveis) comunicado);
                 } else {
                     System.out.println("comunicado desconhecido");
                 }
@@ -131,6 +136,10 @@ public class SupervisoraDeConexao extends Thread {
 
         this.cliente.setUsuario(motorista);
 
+        GrupoCarona grupoDeCarona = new GrupoCarona(pedidoCriarGrupo.getGrupoDeCarona());
+
+        grupoDeCarona.setMotoristaConexao(this.cliente);
+
         System.out.println("motorista: " + motorista.toString());
         System.out.println("idCaronaAtual: " + motorista.getIdCaronaAtual());
 
@@ -138,7 +147,7 @@ public class SupervisoraDeConexao extends Thread {
                 + " para o usuario " + pedidoCriarGrupo.getGrupoDeCarona().getMotorista().getId());
         synchronized (this.gruposDeCarona) {
             this.gruposDeCarona.put(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona(),
-                    pedidoCriarGrupo.getGrupoDeCarona());
+                    grupoDeCarona);
         }
     }
 
@@ -208,7 +217,7 @@ public class SupervisoraDeConexao extends Thread {
         System.out.println("recebido pedido de meu grupo de carona");
         String id = pedidoMeuGrupoCarona.getIdUsuario();
 
-        //printar todas as caronas
+        // printar todas as caronas
         for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
             System.out.println(grupoCarona.toString());
         }
@@ -219,6 +228,7 @@ public class SupervisoraDeConexao extends Thread {
                     System.out.println("motorista: " + grupoCarona.getMotorista().getId() + " id recebido: " + id);
                     if (grupoCarona.getMotorista().getId().equals(id)) {
                         this.cliente.setUsuario(grupoCarona.getMotorista());
+                        grupoCarona.setMotoristaConexao(cliente); // atualiza a conexao vigente do motorista
                         System.out.println("motorista encontrado no grupo de carona:" + grupoCarona.getIdCarona());
                         this.cliente.receba(new ComunicadoMeuGrupoCarona(grupoCarona));
                         return;
@@ -244,6 +254,25 @@ public class SupervisoraDeConexao extends Thread {
         } catch (Exception erro) {
             System.out.println("[ERRO - tratarPedidoMeuGrupoCarona]: " + erro.getMessage());
         }
+    }
+
+    private void tratarPedidoTodosGruposDisponiveis(PedidoTodosGruposDisponiveis pedidoTodosGruposDisponiveis) {
+        System.out.println("recebido pedido de todos os grupos disponiveis");
+
+        ArrayList<GrupoCarona> gruposDisponiveis = new ArrayList<GrupoCarona>();
+
+        for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
+            if (grupoCarona.getVagasTotais() > grupoCarona.getMembros().size()) {
+                gruposDisponiveis.add(grupoCarona);
+            }
+        }
+
+        try {
+            this.cliente.receba(new ComunicadoTodosGupos(gruposDisponiveis));
+        } catch (Exception erro) {
+            System.out.println("[ERRO - tratarPedidoTodosGruposDisponiveis]: " + erro.getMessage());
+        }
+
     }
 
 }

@@ -14,6 +14,7 @@ import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoMeuGrupoCarona;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoTodosGupos;
 import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoCaronaCancelada;
 import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoSaida;
 import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
@@ -21,6 +22,7 @@ import projeto.integrador.iv.Servidor.pedidos.PedidoCriarGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoEntrarNoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoMeuGrupoCarona;
 import projeto.integrador.iv.Servidor.pedidos.PedidoSairDoGrupoDeCarona;
+import projeto.integrador.iv.Servidor.pedidos.PedidoTodosGruposDisponiveis;
 
 public class Parceiro {
     private Socket conexao;
@@ -82,6 +84,8 @@ public class Parceiro {
                     return PedidoSairDoGrupoDeCarona.fromJson(data);
                 case "PedidoMeuGrupoCarona":
                     return PedidoMeuGrupoCarona.fromJson(data);
+                case "PedidoTodosGruposDisponiveis":
+                    return PedidoTodosGruposDisponiveis.fromJson(data);
                 case "ComunicadoGrupoInexistente":
                     return ComunicadoGrupoInexistente.fromJson(data);
                 case "ComunicadoGrupoJaExiste":
@@ -98,6 +102,8 @@ public class Parceiro {
                     return ComunicadoGrupoCriadoComSucesso.fromJson(data);
                 case "ComunicadoMeuGrupoCarona":
                     return ComunicadoMeuGrupoCarona.fromJson(data);
+                case "ComunicadoTodosGupos":
+                    return ComunicadoTodosGupos.fromJson(data);
                 default:
                     return null;
             }
