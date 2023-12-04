@@ -175,7 +175,6 @@ public class SupervisoraDeConexao extends Thread {
             }
             return;
         }
-
         Usuario passageiro = new Usuario(pedidoEntrarNoGrupo.getUsuario());
         passageiro.setIdCaronaAtual(pedidoEntrarNoGrupo.getIdGrupoCarona());
 
@@ -296,8 +295,7 @@ public class SupervisoraDeConexao extends Thread {
         synchronized (this.usuariosSemCarona) {
             usuariosSemCarona.add(this.cliente);
         }
-
-        ComunicadoTodosGupos comunicadoTodosGruposDisponiveis = obterComunicadoTodosGruposDisponiveis();
+        ComunicadoTodosGupos comunicadoTodosGruposDisponiveis = obterComunicadoTodosGruposDisponiveis(this.cliente.getUsuario().getId());
 
         try {
             this.cliente.receba(comunicadoTodosGruposDisponiveis);
@@ -306,11 +304,11 @@ public class SupervisoraDeConexao extends Thread {
         }
     }
 
-    private ComunicadoTodosGupos obterComunicadoTodosGruposDisponiveis() {
+    private ComunicadoTodosGupos obterComunicadoTodosGruposDisponiveis(String idUsuario) {
         ArrayList<GrupoCarona> gruposDisponiveis = new ArrayList<GrupoCarona>();
 
         for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
-            if (grupoCarona.getVagasTotais() > grupoCarona.getMembros().size()) {
+            if (grupoCarona.getVagasTotais() > grupoCarona.getMembros().size() && !grupoCarona.getMotorista().getId().equals(idUsuario)) {
                 gruposDisponiveis.add(grupoCarona);
             }
         }
@@ -322,7 +320,7 @@ public class SupervisoraDeConexao extends Thread {
         try {
             synchronized (this.usuariosSemCarona) {
                 for (Parceiro usuario : this.usuariosSemCarona) {
-                    usuario.receba(obterComunicadoTodosGruposDisponiveis());
+                    usuario.receba(obterComunicadoTodosGruposDisponiveis(usuario.getUsuario().getId()));
                 }
             }
         } catch (Exception erro) {

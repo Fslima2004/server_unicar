@@ -85,7 +85,7 @@ public class Usuario implements Serializable {
         String id = json.getString("id");
         String nome = json.getString("nome");
         String contato = json.getString("contato");
-        String idCaronaAtual = json.optString("idCaronaAtual", "");
+        String idCaronaAtual = json.getString("idCaronaAtual");
 
         return new Usuario(id, nome, contato, idCaronaAtual);
     }

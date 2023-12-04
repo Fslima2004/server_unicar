@@ -55,7 +55,7 @@ public class Parceiro {
 
     public void receba(Comunicado x) throws Exception {
         try {
-            System.out.println("Parceiro: receba: " + x.toJson().toString());
+            //System.out.println("Parceiro: receba: " + x.toJson().toString());
             this.transmissor.println(x.toJson().toString());
             this.transmissor.flush();
         } catch (Exception erro) {
