@@ -137,7 +137,12 @@ public class GrupoCarona implements Serializable {
             // comunicar todos os membros
             this.notificaMembrosComComunicado(new ComunicadoCaronaCancelada());
             this.membros.clear();
-            this.motoristaConexao = null;
+            try {
+                this.motoristaConexao.receba(new ComunicadoSaida());
+                this.motoristaConexao = null;
+            } catch (Exception erro) {
+                // sei que passei os parametros corretos
+            }
             return;
         } else {
             this.membros.remove(membro);

@@ -117,7 +117,15 @@ public class Cliente {
 						servidor.receba(new PedidoEntrarNoGrupoDeCarona(idGrupo, usuario));
 						break;
 					case 'S':
-						servidor.receba(new PedidoSairDoGrupoDeCarona());
+						System.out.print("Qual o id do seu user? ");
+						String idUsuarioTodos = Teclado.getUmString();
+						System.out.println();
+
+						System.out.print("Qual o id do seu user? ");
+						String idGrupox = Teclado.getUmString();
+						System.out.println();
+
+						servidor.receba(new PedidoSairDoGrupoDeCarona(idGrupox, idUsuarioTodos));
 						break;
 					case 'C':
 						GrupoCarona grupoCarona = obterCarona();
@@ -148,10 +156,10 @@ public class Cliente {
 						break;
 					case 'Z':
 						System.out.print("Qual o id do seu user? ");
-						String idUsuarioTodos = Teclado.getUmString();
+						String idU = Teclado.getUmString();
 						System.out.println();
 
-						servidor.receba(new PedidoTodosGruposDisponiveis(idUsuarioTodos));
+						servidor.receba(new PedidoTodosGruposDisponiveis(idU));
 						break;
 				}
 			} catch (Exception erro) {
@@ -164,7 +172,17 @@ public class Cliente {
 		} while (opcao != 'T');
 
 		try {
-			servidor.receba(new PedidoSairDoGrupoDeCarona());
+			// id usuario
+
+			System.out.print("Qual o id do seu user? ");
+			String idUsuarioTodos = Teclado.getUmString();
+			System.out.println();
+
+			System.out.print("Qual o id do seu user? ");
+			String idGrupo = Teclado.getUmString();
+			System.out.println();
+
+			servidor.receba(new PedidoSairDoGrupoDeCarona(idGrupo, idUsuarioTodos));
 		} catch (Exception erro) {
 		}
 

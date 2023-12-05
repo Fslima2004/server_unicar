@@ -237,27 +237,28 @@ public class SupervisoraDeConexao extends Thread {
         System.out.println("recebido pedido para sair do grupo de carona");
         synchronized (this.gruposDeCarona) {
 
-            System.out.println("removendo membro " + cliente.getUsuario().getId());
+            System.out.println("removendo membro " + pedidoSairDoGrupo);
 
             // obter grupo de carona atual => adicionar atirbuto na classe Usuario
             // e setar ele quando usuario entrar em um grupo ou for o motorista
 
-            String idGrupo = this.cliente.getUsuario().getIdCaronaAtual();
-            System.out.println("idGrupo: " + idGrupo);
+            String idGrupo = pedidoSairDoGrupo.getIdGrupo();
 
             GrupoCarona grupoDeCarona = this.gruposDeCarona.get(idGrupo);
 
-            // grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
-            // @Override
-            // public void run() {
-            // notificaUsuariosComCaronasAtualizadas();
-            // }
-            // });
+            if (grupoDeCarona.getMotorista().getId().equals(pedidoSairDoGrupo.getIdUsuario())) {
+                grupoDeCarona.setMotoristaConexao(this.cliente);
+                grupoDeCarona.setMotorista(this.cliente.getUsuario());
+            }
+
+            grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
+                @Override
+                public void run() {
+                    notificaUsuariosComCaronasAtualizadas();
+                }
+            });
 
             this.cliente.getUsuario().setIdCaronaAtual(null);
-
-            // desnecessário tratar isso agora:
-            /// this.cliente.receba(new ComunicadoCaronaCancelada());
 
             grupoDeCarona.removeMembro(this.cliente);
 
