@@ -147,7 +147,11 @@ public class Cliente {
 						servidor.receba(new PedidoMeuGrupoCarona(idUsuario, categoriaString));
 						break;
 					case 'Z':
-						servidor.receba(new PedidoTodosGruposDisponiveis());
+						System.out.print("Qual o id do seu user? ");
+						String idUsuarioTodos = Teclado.getUmString();
+						System.out.println();
+
+						servidor.receba(new PedidoTodosGruposDisponiveis(idUsuarioTodos));
 						break;
 				}
 			} catch (Exception erro) {

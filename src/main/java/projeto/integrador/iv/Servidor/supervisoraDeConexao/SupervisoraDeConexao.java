@@ -29,6 +29,7 @@ public class SupervisoraDeConexao extends Thread {
     private Socket conexao;
     private Map<String, GrupoCarona> gruposDeCarona;
     private ArrayList<Parceiro> usuariosSemCarona;
+    private String idUsuario;
 
     void print(String msg) {
         System.out.println(msg);
@@ -158,6 +159,12 @@ public class SupervisoraDeConexao extends Thread {
             this.gruposDeCarona.put(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona(),
                     grupoDeCarona);
 
+            grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
+                @Override
+                public void run() {
+                    notificaUsuariosComCaronasAtualizadas();
+                }
+            });
         }
         try {
             this.cliente.receba(new ComunicadoGrupoCriadoComSucesso(grupoDeCarona));
@@ -191,15 +198,6 @@ public class SupervisoraDeConexao extends Thread {
 
         this.cliente.setUsuario(passageiro);
 
-        synchronized (this.usuariosSemCarona) {
-            for (Parceiro usuario : this.usuariosSemCarona) {
-                if (usuario.getUsuario().getId().equals(passageiro.getId())) {
-                    this.usuariosSemCarona.remove(usuario);
-                    break;
-                }
-            }
-        }
-
         System.out.println("passageiro: " + passageiro.toString());
         System.out.println("idCaronaAtual: " + passageiro.getIdCaronaAtual());
 
@@ -210,12 +208,29 @@ public class SupervisoraDeConexao extends Thread {
         synchronized (this.gruposDeCarona) {
             GrupoCarona caronaAtual = this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona());
 
-            caronaAtual.addMembro(this.cliente);
+            synchronized (this.usuariosSemCarona) {
+                this.usuariosSemCarona.remove(this.cliente);
+
+                caronaAtual.addMembro(this.cliente);
+            }
+
+            try {
+                this.cliente.receba(
+                        new ComunicadoMeuGrupoCarona(this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona())));
+            } catch (Exception erro) {
+                System.out.println("[ERRO - tratarPedidoEntrarNoGrupoDeCarona - cliente receba]: " + erro.getMessage());
+            }
+
+            caronaAtual.setCallbackAtualizacaoCarona(new Runnable() {
+                @Override
+                public void run() {
+                    notificaUsuariosComCaronasAtualizadas();
+                }
+            });
 
             System.out.println("carona atual: " + caronaAtual.toString());
         }
 
-        notificaUsuariosComCaronasAtualizadas();
     }
 
     private void tratarPedidoSairDoGrupoDeCarona(PedidoSairDoGrupoDeCarona pedidoSairDoGrupo) throws Exception {
@@ -232,14 +247,17 @@ public class SupervisoraDeConexao extends Thread {
 
             GrupoCarona grupoDeCarona = this.gruposDeCarona.get(idGrupo);
 
-            grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
-                @Override
-                public void run() {
-                    notificaUsuariosComCaronasAtualizadas();
-                }
-            });
+            // grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
+            // @Override
+            // public void run() {
+            // notificaUsuariosComCaronasAtualizadas();
+            // }
+            // });
 
             this.cliente.getUsuario().setIdCaronaAtual(null);
+
+            // desnecessário tratar isso agora:
+            /// this.cliente.receba(new ComunicadoCaronaCancelada());
 
             grupoDeCarona.removeMembro(this.cliente);
 
@@ -247,25 +265,15 @@ public class SupervisoraDeConexao extends Thread {
                 this.gruposDeCarona.remove(idGrupo);
             }
 
-            this.cliente.receba(new ComunicadoCaronaCancelada());
-
             // precisa notificar após remover o membro
             // pois pode ser que o grupo sequer exista mais
             notificaUsuariosComCaronasAtualizadas();
         }
-
-        // deve validar aqui se o usuario que saiu era o criador do grupo
-        // this.cliente.adeus(); // encerra as conexões com o usuario
     }
 
     private void tratarPedidoMeuGrupoCarona(PedidoMeuGrupoCarona pedidoMeuGrupoCarona) {
         System.out.println("recebido pedido de meu grupo de carona");
         String id = pedidoMeuGrupoCarona.getIdUsuario();
-
-        // printar todas as caronas
-        for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
-            System.out.println(grupoCarona.toString());
-        }
 
         synchronized (this.gruposDeCarona) {
             try {
@@ -287,10 +295,8 @@ public class SupervisoraDeConexao extends Thread {
                             System.out
                                     .println("passageiro: " + passageiro.getUsuario().getId() + " id recebido: " + id);
                             if (passageiro.getUsuario().getId().equals(id)) {
-                                Parceiro parceiroAtualizado = this.cliente;
-                                // restaura conexao
-                                parceiroAtualizado.setUsuario(passageiro.getUsuario());
-                                grupoCarona.atualizarConexaoMembro(id, parceiroAtualizado);
+                                this.cliente.setUsuario(passageiro.getUsuario());
+                                grupoCarona.atualizarConexaoMembro(id, cliente);
                                 System.out.println(
                                         "passageiro encontrado no grupo de carona:" + grupoCarona.getIdCarona());
                                 this.cliente.receba(new ComunicadoMeuGrupoCarona(grupoCarona));
@@ -312,6 +318,8 @@ public class SupervisoraDeConexao extends Thread {
     private void tratarPedidoTodosGruposDisponiveis(PedidoTodosGruposDisponiveis pedidoTodosGruposDisponiveis) {
         System.out.println("recebido pedido de todos os grupos disponiveis");
 
+        this.idUsuario = pedidoTodosGruposDisponiveis.getIdUsuario();
+
         synchronized (this.usuariosSemCarona) {
             if (!this.usuariosSemCarona.contains(this.cliente))
                 usuariosSemCarona.add(this.cliente);
@@ -331,7 +339,9 @@ public class SupervisoraDeConexao extends Thread {
 
         for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
             if (grupoCarona.getVagasTotais() > grupoCarona.getMembros().size()) {
-                gruposDisponiveis.add(grupoCarona);
+                if (!(grupoCarona.getMotorista().getId().equals(idUsuario)))
+                    gruposDisponiveis.add(grupoCarona);
+
             }
         }
 
