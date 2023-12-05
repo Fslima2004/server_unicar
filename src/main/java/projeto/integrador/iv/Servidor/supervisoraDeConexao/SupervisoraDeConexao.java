@@ -205,6 +205,7 @@ public class SupervisoraDeConexao extends Thread {
 
         System.out.println("entrando no grupo de carona " + pedidoEntrarNoGrupo.getIdGrupoCarona()
                 + " para o usuario " + pedidoEntrarNoGrupo.getUsuario().getId());
+
         synchronized (this.gruposDeCarona) {
             GrupoCarona caronaAtual = this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona());
 
@@ -250,13 +251,6 @@ public class SupervisoraDeConexao extends Thread {
                 grupoDeCarona.setMotoristaConexao(this.cliente);
                 grupoDeCarona.setMotorista(this.cliente.getUsuario());
             }
-
-            grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
-                @Override
-                public void run() {
-                    notificaUsuariosComCaronasAtualizadas();
-                }
-            });
 
             this.cliente.getUsuario().setIdCaronaAtual(null);
 

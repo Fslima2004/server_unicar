@@ -151,7 +151,6 @@ public class GrupoCarona implements Serializable {
             } catch (Exception erro) {
                 // sei que passei os parametros corretos
             }
-
         }
 
         this.notificaMotoristaComComunicado(this.getComunicadoGrupoDeCarona()); // notifica o motorista que um membro
