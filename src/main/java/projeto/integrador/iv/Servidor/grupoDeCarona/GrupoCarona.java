@@ -108,7 +108,7 @@ public class GrupoCarona implements Serializable {
     }
 
     public boolean isMotoristaAusente() {
-        return this.motoristaConexao != null;
+        return this.motoristaConexao == null;
     }
 
     public boolean isEmpty() {
@@ -116,13 +116,6 @@ public class GrupoCarona implements Serializable {
     }
 
     public void removeMembro(Parceiro membro) {
-        this.membros.remove(membro);
-        try {
-            membro.receba(new ComunicadoSaida());
-        } catch (Exception erro) {
-            // sei que passei os parametros corretos
-        }
-
         if (isCriador(membro)) { // é o criador
             // se o membro que saiu for o criador, o grupo de carona é dissolvido
             // comunicar todos os membros
@@ -130,6 +123,14 @@ public class GrupoCarona implements Serializable {
             this.membros.clear();
             this.motoristaConexao = null;
             return;
+        } else {
+            this.membros.remove(membro);
+            try {
+                membro.receba(new ComunicadoSaida());
+            } catch (Exception erro) {
+                // sei que passei os parametros corretos
+            }
+
         }
 
         this.notificaMotoristaComComunicado(this.getComunicadoGrupoDeCarona()); // notifica o motorista que um membro

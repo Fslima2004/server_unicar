@@ -8,10 +8,13 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoCriadoComSucesso;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoMeuGrupoCarona;
-import projeto.integrador.iv.Servidor.comunicados.ComunicadoTodosGupos;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoNenhumGrupoVinculado;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoTodosGuposDisponiveis;
+import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoCaronaCancelada;
 import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
 import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
@@ -160,6 +163,15 @@ public class SupervisoraDeConexao extends Thread {
             this.gruposDeCarona.put(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona(),
                     grupoDeCarona);
         }
+        try {
+            this.cliente.receba(new ComunicadoGrupoCriadoComSucesso(grupoDeCarona));
+        } catch (Exception erro) {
+            synchronized (this.gruposDeCarona) {
+                this.gruposDeCarona.remove(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona());
+            }
+
+        }
+
     }
 
     private void tratarPedidoEntrarNoGrupoDeCarona(PedidoEntrarNoGrupoDeCarona pedidoEntrarNoGrupo) {
@@ -181,6 +193,15 @@ public class SupervisoraDeConexao extends Thread {
 
         this.cliente.setUsuario(passageiro);
 
+        synchronized (this.usuariosSemCarona) {
+            for (Parceiro usuario : this.usuariosSemCarona) {
+                if (usuario.getUsuario().getId().equals(passageiro.getId())) {
+                    this.usuariosSemCarona.remove(usuario);
+                    break;
+                }
+            }
+        }
+
         System.out.println("passageiro: " + passageiro.toString());
         System.out.println("idCaronaAtual: " + passageiro.getIdCaronaAtual());
 
@@ -201,7 +222,6 @@ public class SupervisoraDeConexao extends Thread {
 
             caronaAtual.addMembro(this.cliente);
 
-            System.out.println(caronaAtual.toString());
         }
     }
 
@@ -232,15 +252,15 @@ public class SupervisoraDeConexao extends Thread {
                 this.gruposDeCarona.remove(idGrupo);
             }
 
+            this.cliente.receba(new ComunicadoCaronaCancelada());
+
             // precisa notificar após remover o membro
             // pois pode ser que o grupo sequer exista mais
             notificaUsuariosComCaronasAtualizadas();
-
-            System.out.println(this.gruposDeCarona.get(idGrupo).toString());
         }
 
         // deve validar aqui se o usuario que saiu era o criador do grupo
-        this.cliente.adeus(); // encerra as conexões com o usuario
+        // this.cliente.adeus(); // encerra as conexões com o usuario
     }
 
     private void tratarPedidoMeuGrupoCarona(PedidoMeuGrupoCarona pedidoMeuGrupoCarona) {
@@ -284,7 +304,7 @@ public class SupervisoraDeConexao extends Thread {
             }
 
             System.out.println("usuario nao encontrado");
-            this.cliente.receba(new ComunicadoGrupoInexistente());
+            this.cliente.receba(new ComunicadoNenhumGrupoVinculado());
         } catch (Exception erro) {
             System.out.println("[ERRO - tratarPedidoMeuGrupoCarona]: " + erro.getMessage());
         }
@@ -297,7 +317,7 @@ public class SupervisoraDeConexao extends Thread {
             usuariosSemCarona.add(this.cliente);
         }
 
-        ComunicadoTodosGupos comunicadoTodosGruposDisponiveis = obterComunicadoTodosGruposDisponiveis();
+        ComunicadoTodosGuposDisponiveis comunicadoTodosGruposDisponiveis = obterComunicadoTodosGruposDisponiveis();
 
         try {
             this.cliente.receba(comunicadoTodosGruposDisponiveis);
@@ -306,7 +326,7 @@ public class SupervisoraDeConexao extends Thread {
         }
     }
 
-    private ComunicadoTodosGupos obterComunicadoTodosGruposDisponiveis() {
+    private ComunicadoTodosGuposDisponiveis obterComunicadoTodosGruposDisponiveis() {
         ArrayList<GrupoCarona> gruposDisponiveis = new ArrayList<GrupoCarona>();
 
         for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
@@ -315,7 +335,7 @@ public class SupervisoraDeConexao extends Thread {
             }
         }
 
-        return new ComunicadoTodosGupos(gruposDisponiveis);
+        return new ComunicadoTodosGuposDisponiveis(gruposDisponiveis);
     }
 
     private void notificaUsuariosComCaronasAtualizadas() {

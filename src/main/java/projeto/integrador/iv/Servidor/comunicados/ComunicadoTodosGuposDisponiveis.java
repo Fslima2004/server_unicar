@@ -8,10 +8,10 @@ import org.json.JSONObject;
 import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 
 
-public class ComunicadoTodosGupos implements Comunicado {
+public class ComunicadoTodosGuposDisponiveis implements Comunicado {
     private ArrayList<GrupoCarona> grupos;
 
-    public ComunicadoTodosGupos(ArrayList<GrupoCarona> grupos) {
+    public ComunicadoTodosGuposDisponiveis(ArrayList<GrupoCarona> grupos) {
         this.grupos = grupos;
     }
 
@@ -31,7 +31,7 @@ public class ComunicadoTodosGupos implements Comunicado {
         data.put("grupos", gruposArray);
 
         JSONObject json = new JSONObject();
-        json.put("type", "ComunicadoTodosGupos");
+        json.put("type", "ComunicadoTodosGuposDisponiveis");
         json.put("data", data);
         return json;
     }
@@ -46,7 +46,7 @@ public class ComunicadoTodosGupos implements Comunicado {
             grupos.add(grupo);
         }
 
-        return new ComunicadoTodosGupos(grupos);
+        return new ComunicadoTodosGuposDisponiveis(grupos);
     }
 
 }

@@ -14,7 +14,8 @@ import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoInexistente;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoJaExiste;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoMeuGrupoCarona;
-import projeto.integrador.iv.Servidor.comunicados.ComunicadoTodosGupos;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoNenhumGrupoVinculado;
+import projeto.integrador.iv.Servidor.comunicados.ComunicadoTodosGuposDisponiveis;
 import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoCaronaCancelada;
 import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoSaida;
 import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
@@ -102,8 +103,10 @@ public class Parceiro {
                     return ComunicadoGrupoCriadoComSucesso.fromJson(data);
                 case "ComunicadoMeuGrupoCarona":
                     return ComunicadoMeuGrupoCarona.fromJson(data);
-                case "ComunicadoTodosGupos":
-                    return ComunicadoTodosGupos.fromJson(data);
+                case "ComunicadoTodosGuposDisponiveis":
+                    return ComunicadoTodosGuposDisponiveis.fromJson(data);
+                case "ComunicadoNenhumGrupoVinculado":
+                    return ComunicadoNenhumGrupoVinculado.fromJson(data);
                 default:
                     return null;
             }
