@@ -148,12 +148,6 @@ public class SupervisoraDeConexao extends Thread {
 
         GrupoCarona grupoDeCarona = new GrupoCarona(pedidoCriarGrupo.getGrupoDeCarona());
         grupoDeCarona.setMotoristaConexao(this.cliente);
-        grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
-            @Override
-            public void run() {
-                notificaUsuariosComCaronasAtualizadas();
-            }
-        });
 
         System.out.println("motorista: " + motorista.toString());
         System.out.println("idCaronaAtual: " + motorista.getIdCaronaAtual());
@@ -163,6 +157,7 @@ public class SupervisoraDeConexao extends Thread {
         synchronized (this.gruposDeCarona) {
             this.gruposDeCarona.put(pedidoCriarGrupo.getGrupoDeCarona().getIdCarona(),
                     grupoDeCarona);
+
         }
         try {
             this.cliente.receba(new ComunicadoGrupoCriadoComSucesso(grupoDeCarona));
@@ -172,6 +167,8 @@ public class SupervisoraDeConexao extends Thread {
             }
 
         }
+
+        notificaUsuariosComCaronasAtualizadas();
 
     }
 
@@ -213,17 +210,12 @@ public class SupervisoraDeConexao extends Thread {
         synchronized (this.gruposDeCarona) {
             GrupoCarona caronaAtual = this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona());
 
-            caronaAtual.setCallbackAtualizacaoCarona(new Runnable() {
-            @Override
-            public void run() {
-            notificaUsuariosComCaronasAtualizadas();
-            }
-            });
-
             caronaAtual.addMembro(this.cliente);
 
             System.out.println("carona atual: " + caronaAtual.toString());
         }
+
+        notificaUsuariosComCaronasAtualizadas();
     }
 
     private void tratarPedidoSairDoGrupoDeCarona(PedidoSairDoGrupoDeCarona pedidoSairDoGrupo) throws Exception {
@@ -321,7 +313,8 @@ public class SupervisoraDeConexao extends Thread {
         System.out.println("recebido pedido de todos os grupos disponiveis");
 
         synchronized (this.usuariosSemCarona) {
-            usuariosSemCarona.add(this.cliente);
+            if (!this.usuariosSemCarona.contains(this.cliente))
+                usuariosSemCarona.add(this.cliente);
         }
 
         ComunicadoTodosGuposDisponiveis comunicadoTodosGruposDisponiveis = obterComunicadoTodosGruposDisponiveis();
