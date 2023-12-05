@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import projeto.integrador.iv.Servidor.carro.Carro;
 import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
 import projeto.integrador.iv.Servidor.grupoDeCarona.GrupoCarona;
 import projeto.integrador.iv.Servidor.parceiro.Parceiro;
@@ -111,13 +112,9 @@ public class Cliente {
 						String idGrupo = Teclado.getUmString();
 						System.out.println();
 
-						System.out.print("Qual a parada? ");
-						String parada = Teclado.getUmString();
-						System.out.println();
-
 						Usuario usuario = obterUsuario();
 
-						servidor.receba(new PedidoEntrarNoGrupoDeCarona(idGrupo, parada, usuario));
+						servidor.receba(new PedidoEntrarNoGrupoDeCarona(idGrupo, usuario));
 						break;
 					case 'S':
 						servidor.receba(new PedidoSairDoGrupoDeCarona());
@@ -184,7 +181,13 @@ public class Cliente {
 		String contato = Teclado.getUmString();
 		System.out.println();
 
-		return new Usuario(id, nome, contato);
+		Carro carro = obterCarro();
+
+		System.out.print("Sua parada? ");
+		String parada = Teclado.getUmString();
+		System.out.println();
+
+		return new Usuario(id, nome, contato, "", carro, parada);
 	}
 
 	public static GrupoCarona obterCarona() {
@@ -201,6 +204,10 @@ public class Cliente {
 
 		System.out.print("Horário de saída: ");
 		String horarioSaida = Teclado.getUmString();
+		System.out.println();
+
+		System.out.print("Destino: ");
+		String destino = Teclado.getUmString();
 		System.out.println();
 
 		System.out.print("Preço: ");
@@ -221,8 +228,22 @@ public class Cliente {
 			System.out.println("Vagas inválidas!");
 		}
 
+		return new GrupoCarona(idCarona, motorista, localPartida, horarioSaida, preco, vagasTotais, destino);
+	}
+
+	static Carro obterCarro() {
+		System.out.print("Modelo do carro: ");
+		String modelo = Teclado.getUmString();
 		System.out.println();
 
-		return new GrupoCarona(idCarona, motorista, localPartida, horarioSaida, preco, vagasTotais);
+		System.out.print("Cor do carro: ");
+		String cor = Teclado.getUmString();
+		System.out.println();
+
+		System.out.print("Placa do carro: ");
+		String placa = Teclado.getUmString();
+		System.out.println();
+
+		return new Carro(modelo, cor, placa);
 	}
 }

@@ -8,22 +8,19 @@ import projeto.integrador.iv.Servidor.dadosUsuario.Usuario;
 
 public class PedidoEntrarNoGrupoDeCarona implements PedidoGrupoDeCarona {
     private String idGrupoCarona;
-    private String parada;
+
     private Usuario usuario;
 
-    public PedidoEntrarNoGrupoDeCarona(String idGrupoCarona, String parada,
+    public PedidoEntrarNoGrupoDeCarona(String idGrupoCarona,
             Usuario usuario) {
         this.idGrupoCarona = idGrupoCarona;
-        this.parada = parada;
+
         this.usuario = usuario;
+
     }
 
     public String getIdGrupoCarona() {
         return idGrupoCarona;
-    }
-
-    public String getParada() {
-        return parada;
     }
 
     public Usuario getUsuario() {
@@ -36,7 +33,6 @@ public class PedidoEntrarNoGrupoDeCarona implements PedidoGrupoDeCarona {
 
         data.put("idGrupo", idGrupoCarona);
         data.put("usuario", usuario.toJson());
-        data.put("parada", parada);
         JSONObject json = new JSONObject();
         json.put("type", "PedidoEntrarNoGrupoDeCarona");
         json.put("data", data); // Objeto vazio para "data"
@@ -45,6 +41,6 @@ public class PedidoEntrarNoGrupoDeCarona implements PedidoGrupoDeCarona {
 
     public static Comunicado fromJson(JSONObject json) {
         return new PedidoEntrarNoGrupoDeCarona(json.getString("idGrupo"),
-                json.getString("parada"), Usuario.fromJson(json.getJSONObject("usuario")));
+                Usuario.fromJson(json.getJSONObject("usuario")));
     }
 }

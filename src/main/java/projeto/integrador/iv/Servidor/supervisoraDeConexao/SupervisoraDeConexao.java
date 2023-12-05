@@ -120,6 +120,7 @@ public class SupervisoraDeConexao extends Thread {
             } catch (Exception falha) {
             } // so tentando fechar antes de acabar a thread
 
+            erro.printStackTrace();
             System.out.println("[ERRO - for loop]: " + erro.getMessage());
             return;
         }
@@ -205,7 +206,6 @@ public class SupervisoraDeConexao extends Thread {
         System.out.println("passageiro: " + passageiro.toString());
         System.out.println("idCaronaAtual: " + passageiro.getIdCaronaAtual());
 
-        // printar usuario do cliente
         System.out.println("usuario do cliente: " + this.cliente.getUsuario().toString());
 
         System.out.println("entrando no grupo de carona " + pedidoEntrarNoGrupo.getIdGrupoCarona()
@@ -214,14 +214,15 @@ public class SupervisoraDeConexao extends Thread {
             GrupoCarona caronaAtual = this.gruposDeCarona.get(pedidoEntrarNoGrupo.getIdGrupoCarona());
 
             caronaAtual.setCallbackAtualizacaoCarona(new Runnable() {
-                @Override
-                public void run() {
-                    notificaUsuariosComCaronasAtualizadas();
-                }
+            @Override
+            public void run() {
+            notificaUsuariosComCaronasAtualizadas();
+            }
             });
 
             caronaAtual.addMembro(this.cliente);
 
+            System.out.println("carona atual: " + caronaAtual.toString());
         }
     }
 
@@ -235,6 +236,8 @@ public class SupervisoraDeConexao extends Thread {
             // e setar ele quando usuario entrar em um grupo ou for o motorista
 
             String idGrupo = this.cliente.getUsuario().getIdCaronaAtual();
+            System.out.println("idGrupo: " + idGrupo);
+
             GrupoCarona grupoDeCarona = this.gruposDeCarona.get(idGrupo);
 
             grupoDeCarona.setCallbackAtualizacaoCarona(new Runnable() {
@@ -272,41 +275,45 @@ public class SupervisoraDeConexao extends Thread {
             System.out.println(grupoCarona.toString());
         }
 
-        try {
-            if (pedidoMeuGrupoCarona.getCategoria().equals(PedidoMeuGrupoCarona.MOTORISTA)) {
-                for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
-                    System.out.println("motorista: " + grupoCarona.getMotorista().getId() + " id recebido: " + id);
-                    if (grupoCarona.getMotorista().getId().equals(id)) {
-                        this.cliente.setUsuario(grupoCarona.getMotorista());
-                        // restaura conexao
-                        grupoCarona.setMotoristaConexao(cliente); // atualiza a conexao vigente do motorista
-                        System.out.println("motorista encontrado no grupo de carona:" + grupoCarona.getIdCarona());
-                        this.cliente.receba(new ComunicadoMeuGrupoCarona(grupoCarona));
-                        return;
-                    }
-                }
-            } else if (pedidoMeuGrupoCarona.getCategoria().equals(PedidoMeuGrupoCarona.PASSAGEIRO)) {
-                for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
-                    for (Parceiro passageiro : grupoCarona.getMembros()) {
-                        System.out.println("passageiro: " + passageiro.getUsuario().getId() + " id recebido: " + id);
-                        if (passageiro.getUsuario().getId().equals(id)) {
-                            Parceiro parceiroAtualizado = this.cliente;
+        synchronized (this.gruposDeCarona) {
+            try {
+                if (pedidoMeuGrupoCarona.getCategoria().equals(PedidoMeuGrupoCarona.MOTORISTA)) {
+                    for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
+                        System.out.println("motorista: " + grupoCarona.getMotorista().getId() + " id recebido: " + id);
+                        if (grupoCarona.getMotorista().getId().equals(id)) {
+                            this.cliente.setUsuario(grupoCarona.getMotorista());
                             // restaura conexao
-                            parceiroAtualizado.setUsuario(passageiro.getUsuario());
-                            grupoCarona.atualizarConexaoMembro(id, parceiroAtualizado);
-                            System.out.println("passageiro encontrado no grupo de carona:" + grupoCarona.getIdCarona());
+                            grupoCarona.setMotoristaConexao(cliente); // atualiza a conexao vigente do motorista
+                            System.out.println("motorista encontrado no grupo de carona:" + grupoCarona.getIdCarona());
                             this.cliente.receba(new ComunicadoMeuGrupoCarona(grupoCarona));
                             return;
                         }
                     }
+                } else if (pedidoMeuGrupoCarona.getCategoria().equals(PedidoMeuGrupoCarona.PASSAGEIRO)) {
+                    for (GrupoCarona grupoCarona : this.gruposDeCarona.values()) {
+                        for (Parceiro passageiro : grupoCarona.getMembros()) {
+                            System.out
+                                    .println("passageiro: " + passageiro.getUsuario().getId() + " id recebido: " + id);
+                            if (passageiro.getUsuario().getId().equals(id)) {
+                                Parceiro parceiroAtualizado = this.cliente;
+                                // restaura conexao
+                                parceiroAtualizado.setUsuario(passageiro.getUsuario());
+                                grupoCarona.atualizarConexaoMembro(id, parceiroAtualizado);
+                                System.out.println(
+                                        "passageiro encontrado no grupo de carona:" + grupoCarona.getIdCarona());
+                                this.cliente.receba(new ComunicadoMeuGrupoCarona(grupoCarona));
+                                return;
+                            }
+                        }
+                    }
+
                 }
 
+                System.out.println("usuario nao encontrado");
+                this.cliente.receba(new ComunicadoNenhumGrupoVinculado());
+            } catch (Exception erro) {
+                System.out.println("[ERRO - tratarPedidoMeuGrupoCarona]: " + erro.getMessage());
             }
-
-            System.out.println("usuario nao encontrado");
-            this.cliente.receba(new ComunicadoNenhumGrupoVinculado());
-        } catch (Exception erro) {
-            System.out.println("[ERRO - tratarPedidoMeuGrupoCarona]: " + erro.getMessage());
         }
     }
 
@@ -339,9 +346,12 @@ public class SupervisoraDeConexao extends Thread {
     }
 
     private void notificaUsuariosComCaronasAtualizadas() {
+        System.out.println("notificando usuarios com caronas atualizadas");
         try {
             synchronized (this.usuariosSemCarona) {
                 for (Parceiro usuario : this.usuariosSemCarona) {
+
+                    System.out.println("notificaUsuariosComCaronasAtualizadas: " + usuario.getUsuario());
                     usuario.receba(obterComunicadoTodosGruposDisponiveis());
                 }
             }

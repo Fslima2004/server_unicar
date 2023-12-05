@@ -6,8 +6,10 @@ import java.io.Serializable;
 // de estado da carona, assim como a lista de membros
 import java.util.ArrayList;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import projeto.integrador.iv.Servidor.carro.Carro;
 import projeto.integrador.iv.Servidor.comunicados.Comunicado;
 import projeto.integrador.iv.Servidor.comunicados.ComunicadoGrupoDeCarona;
 import projeto.integrador.iv.Servidor.comunicados.encerramento.ComunicadoCaronaCancelada;
@@ -21,6 +23,7 @@ public class GrupoCarona implements Serializable {
     private String idCarona;
     private String localPartida;
     private String horarioSaida;
+    private String destino;
     private double preco;
     private int vagasTotais;
     private Parceiro motoristaConexao; // preciso atualizar esta conexao sempre que um motorista entrar com outra
@@ -29,7 +32,7 @@ public class GrupoCarona implements Serializable {
     private Runnable callbackAtualizacaoCarona;
 
     public GrupoCarona(String idCarona, Usuario motorista, String localPartida,
-            String horarioSaida, double preco, int vagasTotais) {
+            String horarioSaida, double preco, int vagasTotais, String destino) {
         this.idCarona = idCarona;
         this.membros = new ArrayList<Parceiro>();
         this.motorista = motorista;
@@ -37,6 +40,8 @@ public class GrupoCarona implements Serializable {
         this.horarioSaida = horarioSaida;
         this.preco = preco;
         this.vagasTotais = vagasTotais;
+
+        this.destino = destino;
     }
 
     public GrupoCarona(GrupoCarona grupoCarona) {
@@ -47,10 +52,21 @@ public class GrupoCarona implements Serializable {
         this.horarioSaida = grupoCarona.horarioSaida;
         this.preco = grupoCarona.preco;
         this.vagasTotais = grupoCarona.vagasTotais;
+        this.destino = grupoCarona.destino;
+        this.motoristaConexao = grupoCarona.motoristaConexao;
     }
 
     public Usuario getMotorista() {
         return motorista;
+    }
+
+    // set motorista
+    public void setMotorista(Usuario motorista) {
+        this.motorista = motorista;
+    }
+
+    public Carro getCarro() {
+        return this.motorista.getCarro();
     }
 
     public String getIdCarona() {
@@ -147,9 +163,28 @@ public class GrupoCarona implements Serializable {
     }
 
     private void notificaMotoristaComComunicado(Comunicado comunicado) {
+
+        System.out.println("GrupoCarona: notificaMotoristaComComunicado");
+
         try {
+            if (this.motoristaConexao == null) {
+                System.out.println("GrupoCarona: notificaMotoristaComComunicado: motoristaConexao null");
+            } else {
+                System.out.println("GrupoCarona: notificaMotoristaComComunicado: " + motoristaConexao.getUsuario());
+            }
+            // notifica motorista print
+            if (comunicado == null) {
+                System.out.println("GrupoCarona: notificaMotoristaComComunicado: comunicado null");
+            } else {
+                System.out.println("GrupoCarona: notificaMotoristaComComunicado: " + comunicado.toJson().toString());
+            }
+
             this.motoristaConexao.receba(comunicado);
         } catch (Exception erro) {
+            System.out.println(erro.getMessage());
+            // print stack trace
+            erro.printStackTrace();
+            System.out.println("Erro ao notificar motorista");
         }
     }
 
@@ -165,17 +200,25 @@ public class GrupoCarona implements Serializable {
     public static GrupoCarona fromJson(JSONObject json) {
         return new GrupoCarona(json.getString("idCarona"), Usuario.fromJson(json.getJSONObject("motorista")),
                 json.getString("localPartida"), json.getString("horarioSaida"), json.getDouble("preco"),
-                json.getInt("vagasTotais"));
+                json.getInt("vagasTotais"), json.getString("localDestino"));
     }
 
     public JSONObject toJson() {
+
         JSONObject json = new JSONObject();
+        JSONArray usuariosArray = new JSONArray();
+        for (Parceiro usuario : membros) {
+            usuariosArray.put(usuario.getUsuario().toJson());
+        }
+
+        json.put("usuarios", usuariosArray);
         json.put("idCarona", this.idCarona);
         json.put("motorista", this.motorista.toJson());
         json.put("localPartida", this.localPartida);
         json.put("horarioSaida", this.horarioSaida);
         json.put("preco", this.preco);
         json.put("vagasTotais", this.vagasTotais);
+        json.put("localDestino", this.destino);
         return json;
     }
 
