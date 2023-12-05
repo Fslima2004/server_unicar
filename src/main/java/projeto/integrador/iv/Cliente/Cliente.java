@@ -121,7 +121,7 @@ public class Cliente {
 						String idUsuarioTodos = Teclado.getUmString();
 						System.out.println();
 
-						System.out.print("Qual o id do seu user? ");
+						System.out.print("Qual o id do seu grupo? ");
 						String idGrupox = Teclado.getUmString();
 						System.out.println();
 
